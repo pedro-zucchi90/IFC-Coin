@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/goal_model.dart';
 import 'auth_service.dart';
+import '../config.dart';
 
 class GoalService {
-  static const String baseUrl = 'http://192.168.1.102:3000/api';
+  // baseUrl vem do config.dart
   final AuthService _authService = AuthService();
 
   // Listar todas as metas disponíveis

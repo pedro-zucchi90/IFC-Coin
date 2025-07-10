@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
+import '../config.dart';
 
 class UserService {
-  static const String baseUrl = 'http://192.168.1.102:3000/api';
+  // baseUrlvem do config.dart
   final AuthService _authService = AuthService();
 
   // Atualizar perfil do usuário

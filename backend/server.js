@@ -1,9 +1,9 @@
+require('dotenv').config(); // <--- DEVE vir antes de tudo
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -38,7 +38,8 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Conexão com MongoDB
+console.log('Tentando conectar ao MongoDB...');
+console.log('String de conexão:', process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -50,24 +51,25 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin'
   console.error('Erro ao conectar ao MongoDB:', err);
   process.exit(1);
 });
+console.log('Depois do mongoose.connect');
 
-// Rotas
+//rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/transaction', require('./routes/transaction'));
 app.use('/api/goal', require('./routes/goal'));
 app.use('/api/achievement', require('./routes/achievement'));
 
-// Rota de teste
+//rota de teste
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'IFC Coin API está funcionando!',
+    message: 'API está funcionando',
     timestamp: new Date().toISOString()
   });
 });
 
-// Middleware de tratamento de erros
+//tratamento de erros
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
@@ -81,7 +83,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Rota não encontrada' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`API disponível em: http://localhost:${PORT}/api`);
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Servidor rodando na porta 3000');
+  console.log('API disponível em: http://localhost:3000/api');
 }); 

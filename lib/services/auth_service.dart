@@ -3,11 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../models/user_model.dart';
+import '../config.dart';
 
 class AuthService {
   // Para desenvolvimento local, use o IP da sua máquina
   // Você pode descobrir seu IP com: ipconfig no Windows
-  static const String baseUrl = 'http://192.168.1.102:3000/api'; // Ajuste para seu IP
+  // baseUrl vem do config.dart
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
 

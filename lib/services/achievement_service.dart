@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/achievement_model.dart';
 import 'auth_service.dart';
+import '../config.dart';
 
 class AchievementService {
-  static const String baseUrl = 'http://192.168.1.102:3000/api';
+  // baseUrl vem do config.dart
   final AuthService _authService = AuthService();
 
   // Listar todas as conquistas disponíveis
