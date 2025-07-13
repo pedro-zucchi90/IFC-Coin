@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/goal_model.dart';
 import '../services/goal_service.dart';
+import '../services/notification_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../widgets/user_avatar.dart';
+import 'perfil_screen.dart';
+
+const Color azulPrincipal = Color(0xFF1976D2);
 
 class MetasScreen extends StatefulWidget {
   const MetasScreen({Key? key}) : super(key: key);
@@ -13,6 +20,7 @@ class MetasScreen extends StatefulWidget {
 
 class _MetasScreenState extends State<MetasScreen> {
   final GoalService _goalService = GoalService();
+  final NotificationService _notificationService = NotificationService();
   List<Goal> _metas = [];
   bool _isLoading = true;
   String? _error;
@@ -55,6 +63,17 @@ class _MetasScreenState extends State<MetasScreen> {
     setState(() { _isLoading = true; });
     try {
       await _goalService.concluirMeta(metaId: meta.id!);
+      
+      // Mostrar notificação local
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        await _notificationService.notificarMetaConcluida(
+          user.nome,
+          meta.titulo,
+          meta.recompensa,
+        );
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -76,6 +95,143 @@ class _MetasScreenState extends State<MetasScreen> {
       }
       setState(() { _isLoading = false; });
     }
+  }
+
+  Future<void> _solicitarConclusaoMeta(Goal meta) async {
+    final TextEditingController descricaoController = TextEditingController();
+    final TextEditingController evidenciaTextoController = TextEditingController();
+    File? evidenciaArquivo;
+    bool isLoading = false;
+    String? error;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> pickImage() async {
+              final picker = ImagePicker();
+              final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+              if (pickedFile != null) {
+                setState(() {
+                  evidenciaArquivo = File(pickedFile.path);
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.assignment_turned_in, color: azulPrincipal),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Solicitar conclusão de meta')),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(meta.titulo, style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 12),
+                    TextField(
+                      controller: descricaoController,
+                      decoration: InputDecoration(
+                        labelText: 'Descrição (obrigatório)',
+                        border: OutlineInputBorder(),
+                      ),
+                      minLines: 2,
+                      maxLines: 4,
+                    ),
+                    SizedBox(height: 12),
+                    TextField(
+                      controller: evidenciaTextoController,
+                      decoration: InputDecoration(
+                        labelText: 'Evidência (texto opcional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      minLines: 1,
+                      maxLines: 3,
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: pickImage,
+                          icon: Icon(Icons.image),
+                          label: Text('Anexar Imagem'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: azulPrincipal,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        if (evidenciaArquivo != null)
+                          Expanded(
+                            child: Text(
+                              evidenciaArquivo!.path.split('/').last,
+                              style: TextStyle(fontSize: 12, color: Colors.green),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (error != null) ...[
+                      SizedBox(height: 8),
+                      Text(error!, style: TextStyle(color: Colors.red)),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                  child: Text('Cancelar', style: TextStyle(color: azulPrincipal)),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (descricaoController.text.trim().isEmpty) {
+                            setState(() { error = 'Descrição é obrigatória.'; });
+                            return;
+                          }
+                          setState(() { isLoading = true; error = null; });
+                          try {
+                            await _goalService.concluirMeta(
+                              metaId: meta.id!,
+                              evidenciaTexto: evidenciaTextoController.text.trim(),
+                              comentario: descricaoController.text.trim(),
+                              evidenciaArquivo: evidenciaArquivo,
+                            );
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Solicitação enviada para análise!'),
+                                  backgroundColor: azulPrincipal,
+                                ),
+                              );
+                              await _carregarMetas();
+                            }
+                          } catch (e) {
+                            setState(() { error = e.toString(); isLoading = false; });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: azulPrincipal,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isLoading
+                      ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : Text('Enviar Solicitação'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -102,9 +258,19 @@ class _MetasScreenState extends State<MetasScreen> {
             icon: const Icon(Icons.qr_code, color: Colors.black, size: 40),
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.account_circle_outlined, color: Colors.black, size: 40),
-            onPressed: () {},
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: UserAvatar(
+              radius: 20,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PerfilScreen(),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -250,16 +416,16 @@ class _MetasScreenState extends State<MetasScreen> {
                                             ],
                                           ),
                                         )
-                                                                              else
+                                      else
                                         SizedBox(
                                           width: double.infinity,
                                           child: ElevatedButton(
-                                            onPressed: () => _concluirMeta(meta),
+                                            onPressed: () => _solicitarConclusaoMeta(meta),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.blue,
+                                              backgroundColor: azulPrincipal,
                                               foregroundColor: Colors.white,
                                             ),
-                                            child: const Text('Concluir Meta'),
+                                            child: const Text('Solicitar conclusão de meta'),
                                           ),
                                         ),
                                     ],

@@ -31,6 +31,14 @@ const userSchema = new mongoose.Schema({
         enum: ['aluno', 'professor', 'admin'], 
         default: 'aluno' 
     },
+    statusAprovacao: {
+        type: String,
+        enum: ['pendente', 'aprovado', 'recusado'],
+        default: function() {
+            // Professores começam como pendentes, outros como aprovados
+            return this.role === 'professor' ? 'pendente' : 'aprovado';
+        }
+    },
     curso: { 
         type: String, 
         enum: ['Engenharia de Alimentos', 'Agropecuária', 'Informática para Internet'],
@@ -47,6 +55,10 @@ const userSchema = new mongoose.Schema({
     fotoPerfil: { 
         type: String, 
         default: '' 
+    },
+    fotoPerfilBin: {
+        type: Buffer,
+        select: false // não retorna por padrão
     },
     ultimoLogin: {
         type: Date,
@@ -107,12 +119,14 @@ userSchema.methods.atualizarUltimoLogin = function() {
 userSchema.methods.toPublicJSON = function() {
     const userObject = this.toObject();
     delete userObject.senha;
+    delete userObject.fotoPerfilBin;
     return userObject;
 };
 
 // Índices para melhor performance
-userSchema.index({ email: 1 });
-userSchema.index({ matricula: 1 });
+// Remover índices duplicados para email e matricula, pois já estão definidos como unique no campo
+// userSchema.index({ email: 1 });
+// userSchema.index({ matricula: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ ativo: 1 });
 

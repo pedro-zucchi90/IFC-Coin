@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'services/notification_service.dart';
 import 'screens/tela_login.dart';
 import 'screens/home.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicializar serviço de notificações
+  await NotificationService().initialize();
+  
   runApp(const MyApp());
 }
 

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -38,12 +39,12 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Servir arquivos da pasta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 console.log('Tentando conectar ao MongoDB...');
-console.log('String de conexão:', process.env.MONGODB_URI);
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+// Remover opções deprecated do mongoose.connect
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin')
 .then(() => {
   console.log('Conectado ao MongoDB');
 })
@@ -51,7 +52,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin'
   console.error('Erro ao conectar ao MongoDB:', err);
   process.exit(1);
 });
-console.log('Depois do mongoose.connect');
 
 //rotas
 app.use('/api/auth', authRoutes);
@@ -59,6 +59,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/transaction', require('./routes/transaction'));
 app.use('/api/goal', require('./routes/goal'));
 app.use('/api/achievement', require('./routes/achievement'));
+app.use('/api/admin', require('./routes/admin'));
 
 //rota de teste
 app.get('/api/health', (req, res) => {
@@ -85,5 +86,5 @@ app.use('*', (req, res) => {
 
 app.listen(3000, '0.0.0.0', () => {
   console.log('Servidor rodando na porta 3000');
-  console.log('API disponível em: http://localhost:3000/api');
+  console.log('API disponível em: http://192.168.0.107:3000/api');
 }); 

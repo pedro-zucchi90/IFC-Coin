@@ -7,23 +7,8 @@ const { verificarToken, verificarAdmin, verificarProfessor } = require('../middl
 
 const router = express.Router();
 
-// Configuração do multer para upload de arquivos
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/fotos-perfil';
-    // Criar diretório se não existir
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    // Gerar nome único para o arquivo
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'foto-' + req.user._id + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configuração do multer para upload de arquivos EM MEMÓRIA
+const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
@@ -42,7 +27,7 @@ const upload = multer({
 // GET /api/user/perfil - Obter perfil do usuário logado
 router.get('/perfil', verificarToken, async (req, res) => {
     try {
-        res.json(req.user);
+        res.json(req.user); // req.user já é toPublicJSON pelo middleware
     } catch (error) {
         console.error('Erro ao obter perfil:', error);
         res.status(500).json({
@@ -52,13 +37,13 @@ router.get('/perfil', verificarToken, async (req, res) => {
 });
 
 // PUT /api/user/perfil - Atualizar dados do perfil
-router.put('/perfil', verificarToken, async (req, res) => {
+router.put('/perfil', verificarToken, upload.single('fotoPerfil'), async (req, res) => {
   try {
     const { nome, email, curso } = req.body;
     const userId = req.user._id;
 
     // Buscar usuário
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select('+fotoPerfilBin');
     if (!user) {
       return res.status(404).json({
         message: 'Usuário não encontrado'
@@ -71,7 +56,6 @@ router.put('/perfil', verificarToken, async (req, res) => {
         email: email.toLowerCase().trim(),
         _id: { $ne: userId }
       });
-      
       if (emailExistente) {
         return res.status(400).json({
           message: 'Email já está em uso'
@@ -83,6 +67,14 @@ router.put('/perfil', verificarToken, async (req, res) => {
     if (nome) user.nome = nome.trim();
     if (email) user.email = email.toLowerCase().trim();
     if (curso !== undefined) user.curso = curso;
+
+    // Se veio arquivo, atualizar foto de perfil
+    if (req.file) {
+      // Salvar binário no MongoDB
+      user.fotoPerfilBin = req.file.buffer;
+      // Atualizar campo fotoPerfil para endpoint
+      user.fotoPerfil = `/api/user/foto/${user._id}`;
+    }
 
     await user.save();
 
@@ -99,7 +91,7 @@ router.put('/perfil', verificarToken, async (req, res) => {
   }
 });
 
-// POST /api/user/foto-perfil - Upload de foto de perfil
+// POST /api/user/foto-perfil - Upload de foto de perfil (opcional, pode ser removido se não usado)
 router.post('/foto-perfil', verificarToken, upload.single('foto'), async (req, res) => {
   try {
     if (!req.file) {
@@ -109,30 +101,21 @@ router.post('/foto-perfil', verificarToken, upload.single('foto'), async (req, r
     }
 
     const userId = req.user._id;
-    const user = await User.findById(userId);
-    
+    const user = await User.findById(userId).select('+fotoPerfilBin');
     if (!user) {
       return res.status(404).json({
         message: 'Usuário não encontrado'
       });
     }
 
-    // Se já existe uma foto, deletar a antiga
-    if (user.fotoPerfil && user.fotoPerfil.startsWith('/uploads/')) {
-      const oldPhotoPath = path.join(__dirname, '..', user.fotoPerfil);
-      if (fs.existsSync(oldPhotoPath)) {
-        fs.unlinkSync(oldPhotoPath);
-      }
-    }
-
-    // Salvar caminho da nova foto
-    const fotoPath = '/uploads/fotos-perfil/' + req.file.filename;
-    user.fotoPerfil = fotoPath;
+    // Salvar binário no MongoDB
+    user.fotoPerfilBin = req.file.buffer;
+    user.fotoPerfil = `/api/user/foto/${user._id}`;
     await user.save();
 
     res.json({
       message: 'Foto de perfil atualizada com sucesso',
-      fotoPerfil: fotoPath
+      fotoPerfil: user.fotoPerfil
     });
 
   } catch (error) {
@@ -140,6 +123,21 @@ router.post('/foto-perfil', verificarToken, upload.single('foto'), async (req, r
     res.status(500).json({
       message: 'Erro interno do servidor'
     });
+  }
+});
+
+// GET /api/user/foto/:id - Servir a foto de perfil do usuário
+router.get('/foto/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('+fotoPerfilBin');
+    if (!user || !user.fotoPerfilBin) {
+      return res.status(404).send('Foto não encontrada');
+    }
+    // Detectar tipo da imagem (simples, assume jpeg)
+    res.set('Content-Type', 'image/jpeg');
+    res.send(user.fotoPerfilBin);
+  } catch (error) {
+    res.status(500).send('Erro ao buscar foto');
   }
 });
 

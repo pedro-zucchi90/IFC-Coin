@@ -8,58 +8,10 @@ require('dotenv').config();
 // Dados de exemplo
 const usuariosExemplo = [
     {
-        nome: 'João Silva',
-        email: 'joao.silva@ifc.edu.br',
-        senha: '123456',
-        matricula: '2021001',
-        role: 'aluno',
-        curso: 'Informática para Internet',
-        turmas: ['INFO-2021-1', 'INFO-2021-2'],
-        saldo: 50
-    },
-    {
-        nome: 'Maria Santos',
-        email: 'maria.santos@ifc.edu.br',
-        senha: '123456',
-        matricula: '2021002',
-        role: 'aluno',
-        curso: 'Engenharia de Alimentos',
-        turmas: ['ENGA-2021-1'],
-        saldo: 30
-    },
-    {
-        nome: 'Pedro Oliveira',
-        email: 'pedro.oliveira@ifc.edu.br',
-        senha: '123456',
-        matricula: '2021003',
-        role: 'aluno',
-        curso: 'Agropecuária',
-        turmas: ['AGRO-2021-1'],
-        saldo: 75
-    },
-    {
-        nome: 'Ana Costa',
-        email: 'ana.costa@ifc.edu.br',
-        senha: '123456',
-        matricula: 'PROF001',
-        role: 'professor',
-        turmas: ['INFO-2021-1', 'INFO-2021-2'],
-        saldo: 0
-    },
-    {
-        nome: 'Carlos Ferreira',
-        email: 'carlos.ferreira@ifc.edu.br',
-        senha: '123456',
-        matricula: 'PROF002',
-        role: 'professor',
-        turmas: ['ENGA-2021-1'],
-        saldo: 0
-    },
-    {
-        nome: 'Administrador Sistema',
-        email: 'admin@ifc.edu.br',
-        senha: 'admin123',
-        matricula: 'ADMIN001',
+        nome: 'Administrador Sistema Celular',
+        email: 'admin44@gmail.com',
+        senha: 'admin12',
+        matricula: '1234002',
         role: 'admin',
         turmas: [],
         saldo: 0
@@ -69,10 +21,7 @@ const usuariosExemplo = [
 async function seedDatabase() {
     try {
         // Conectar ao MongoDB
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin');
 
         console.log('Conectado ao MongoDB');
 
@@ -195,28 +144,22 @@ async function seedDatabase() {
         const conquistasCriadas = await Achievement.insertMany(conquistasExemplo);
         console.log(`${conquistasCriadas.length} conquistas criadas com sucesso`);
 
-        // Criar algumas transações de exemplo
-        const transacoesExemplo = [
-            {
-                tipo: 'recebido',
-                origem: null, // Sistema
-                destino: usuariosCriados[0]._id, // João Silva
-                quantidade: 10,
-                descricao: 'Recompensa por primeira aula',
-                hash: 'seed_tx_001'
-            },
-            {
-                tipo: 'enviado',
-                origem: usuariosCriados[0]._id, // João Silva
-                destino: usuariosCriados[1]._id, // Maria Santos
-                quantidade: 5,
-                descricao: 'Transferência para Maria',
-                hash: 'seed_tx_002'
-            }
-        ];
+        // Criar algumas transações de exemplo (apenas se houver usuários suficientes)
+        if (usuariosCriados.length > 0) {
+            const transacoesExemplo = [
+                {
+                    tipo: 'recebido',
+                    origem: null, // Sistema
+                    destino: usuariosCriados[0]._id,
+                    quantidade: 10,
+                    descricao: 'Recompensa por primeira aula',
+                    hash: 'seed_tx_001'
+                }
+            ];
 
-        const transacoesCriadas = await Transaction.insertMany(transacoesExemplo);
-        console.log(`${transacoesCriadas.length} transações de exemplo criadas`);
+            const transacoesCriadas = await Transaction.insertMany(transacoesExemplo);
+            console.log(`${transacoesCriadas.length} transações de exemplo criadas`);
+        }
 
         // Mostrar informações dos usuários criados
         console.log('\nUsuários criados:');
@@ -236,9 +179,7 @@ async function seedDatabase() {
 
         console.log('\nScript de seed concluído com sucesso!');
         console.log('\nCredenciais de teste:');
-        console.log('Aluno: matrícula 2021001, senha 123456');
-        console.log('Professor: matrícula PROF001, senha 123456');
-        console.log('Admin: matrícula ADMIN001, senha admin123');
+        console.log('Admin: matrícula 1234002, senha admin12');
 
     } catch (error) {
         console.error('Erro durante o seed:', error);

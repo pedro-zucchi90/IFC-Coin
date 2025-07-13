@@ -206,7 +206,7 @@ router.post('/concluir/:id', verificarToken, async (req, res) => {
 });
 
 // PUT /api/goal/:id - Atualizar meta (admin)
-router.put('/:id', verificarAdmin, async (req, res) => {
+router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const { titulo, descricao, tipo, requisito, recompensa } = req.body;
         const metaId = req.params.id;

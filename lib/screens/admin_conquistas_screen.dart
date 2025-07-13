@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/achievement_model.dart';
 import '../services/achievement_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class AdminConquistasScreen extends StatefulWidget {
   const AdminConquistasScreen({Key? key}) : super(key: key);
@@ -327,6 +329,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
   }
 
   Future<void> _deletarConquista(Achievement conquista) async {
+    await context.read<AuthProvider>().initialize();
     final confirmacao = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

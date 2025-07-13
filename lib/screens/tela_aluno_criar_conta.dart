@@ -289,6 +289,9 @@ class _TelaAlunoCriarContaState extends State<TelaAlunoCriarConta> {
                                                   builder: (context) => HomeScreen(),
                                                 ),
                                               );
+                                            } else {
+                                              // Garante que o loading some e o erro aparece
+                                              setState(() {});
                                             }
                                           }
                                         },

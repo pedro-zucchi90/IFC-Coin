@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/achievement_model.dart';
 import '../services/achievement_service.dart';
+import '../widgets/user_avatar.dart';
+import 'perfil_screen.dart';
 
 class ConquistasScreen extends StatefulWidget {
   const ConquistasScreen({Key? key}) : super(key: key);
@@ -100,9 +102,19 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
             icon: const Icon(Icons.qr_code, color: Colors.black, size: 40),
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.account_circle_outlined, color: Colors.black, size: 40),
-            onPressed: () {},
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: UserAvatar(
+              radius: 20,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PerfilScreen(),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

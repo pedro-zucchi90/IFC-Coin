@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../models/achievement_model.dart';
 import '../services/achievement_service.dart';
 import '../services/user_service.dart';
+import '../config.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({Key? key}) : super(key: key);
@@ -151,6 +152,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _processarEEnviarFoto(File imageFile) async {
+    if (_isUploadingPhoto) return;
     try {
       setState(() {
         _isUploadingPhoto = true;
@@ -176,19 +178,23 @@ class _PerfilScreenState extends State<PerfilScreen> {
       );
 
       if (croppedFile != null) {
-        // Fazer upload da foto
-        final fotoUrl = await _userService.uploadFotoPerfil(File(croppedFile.path));
-        
-        // Atualizar dados do usuário no provider
-        await context.read<AuthProvider>().updateUserData();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Foto de perfil atualizada com sucesso!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+        // Salvar apenas o path local da foto de perfil
+        final success = await _userService.atualizarPerfil(
+          nome: _nomeController.text.trim(),
+          email: _emailController.text.trim(),
+          curso: _cursoController.text.trim(),
+          fotoPerfilFile: File(croppedFile.path),
+        );
+        if (success) {
+          await context.read<AuthProvider>().updateUserData();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Foto de perfil atualizada com sucesso!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -316,19 +322,35 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         // Foto de perfil
                         Stack(
                           children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.grey.shade300,
-                              backgroundImage: user.fotoPerfil != null && user.fotoPerfil!.isNotEmpty
-                                  ? NetworkImage(user.fotoPerfil!)
-                                  : null,
-                              child: user.fotoPerfil == null || user.fotoPerfil!.isEmpty
-                                  ? Icon(
-                                      Icons.person,
-                                      size: 50,
-                                      color: Colors.grey.shade600,
-                                    )
-                                  : null,
+                            Builder(
+                              builder: (context) {
+                                String? fotoPerfilUrl = user.fotoPerfil;
+                                if (fotoPerfilUrl != null && fotoPerfilUrl.isNotEmpty) {
+                                  String url = fotoPerfilUrl;
+                                  if (!url.startsWith('http')) {
+                                    String base = baseUrl;
+                                    if (base.endsWith('/api')) base = base.substring(0, base.length - 4);
+                                    if (!url.startsWith('/')) url = '/$url';
+                                    url = '$base$url';
+                                  }
+                                  // Forçar atualização da imagem (cache bust)
+                                  url = '$url?${DateTime.now().millisecondsSinceEpoch}';
+                                  return CircleAvatar(
+                                    radius: 50,
+                                    backgroundColor: Colors.grey.shade300,
+                                    backgroundImage: NetworkImage(url),
+                                  );
+                                }
+                                return CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: Colors.grey.shade300,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                );
+                              },
                             ),
                             if (_isUploadingPhoto)
                               Positioned.fill(
@@ -474,14 +496,20 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 const SizedBox(height: 24),
                 
                 // Seção de Conquistas
-                const Text(
-                  'Minhas Conquistas',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                Center(
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Minhas Conquistas',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
                 
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -636,4 +664,4 @@ class _InfoItem extends StatelessWidget {
       ],
     );
   }
-} 
+}

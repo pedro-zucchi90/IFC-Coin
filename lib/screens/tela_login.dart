@@ -145,19 +145,70 @@ class _TelaLoginState extends State<TelaLogin> {
                                       ? null
                                       : () async {
                                           if (_formKey.currentState!.validate()) {
-                                            final success = await authProvider.login(
+                                            final loginResult = await authProvider.login(
                                               _matriculaController.text.trim(),
                                               _senhaController.text,
                                             );
-                                            if (success) {
+                                            if (loginResult['success']) {
                                               if (mounted) {
-                                                Navigator.pushReplacement(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => HomeScreen(),
-                                                  ),
-                                                );
+                                                // Se for professor aprovado, mostrar notificação
+                                                if (loginResult['showApprovalNotification']) {
+                                                  await showDialog(
+                                                    context: context,
+                                                    barrierDismissible: false,
+                                                    builder: (context) => AlertDialog(
+                                                      title: Row(
+                                                        children: [
+                                                          Icon(Icons.celebration, color: Colors.green, size: 32),
+                                                          SizedBox(width: 12),
+                                                          Expanded(
+                                                            child: Text(
+                                                              'Conta Aprovada!',
+                                                              style: TextStyle(
+                                                                fontSize: 20,
+                                                                fontWeight: FontWeight.bold,
+                                                                color: Colors.green,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      content: Text(
+                                                        'Parabéns! Sua solicitação foi aprovada e você já pode usar o sistema IFC Coin.',
+                                                        style: TextStyle(fontSize: 16),
+                                                      ),
+                                                      actions: [
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.of(context).pop();
+                                                            Navigator.pushReplacement(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder: (context) => HomeScreen(),
+                                                              ),
+                                                            );
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor: Colors.green,
+                                                            foregroundColor: Colors.white,
+                                                          ),
+                                                          child: Text('Continuar'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                } else {
+                                                  Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => HomeScreen(),
+                                                    ),
+                                                  );
+                                                }
                                               }
+                                            } else {
+                                              // Garante que o loading some e o erro aparece
+                                              setState(() {});
                                             }
                                           }
                                         },

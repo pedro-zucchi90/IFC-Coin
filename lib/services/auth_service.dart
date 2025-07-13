@@ -58,7 +58,6 @@ class AuthService {
         await logout();
       }
     } catch (e) {
-      print('Erro ao carregar dados armazenados: $e');
       await logout();
     }
   }
@@ -73,7 +72,6 @@ class AuthService {
       _token = token;
       _currentUser = user;
     } catch (e) {
-      print('Erro ao salvar dados: $e');
       throw Exception('Erro ao salvar dados de autenticação');
     }
   }
@@ -123,8 +121,6 @@ class AuthService {
     List<String> turmas = const [],
   }) async {
     try {
-      print('🔗 Tentando registrar em: $baseUrl/auth/registro');
-      print('📝 Dados de registro: nome=$nome, email=$email, matrícula=$matricula, role=$role');
       
       final response = await http.post(
         Uri.parse('$baseUrl/auth/registro'),
@@ -141,15 +137,23 @@ class AuthService {
           'turmas': turmas,
         }),
       );
-      
-      print('📡 Status da resposta: ${response.statusCode}');
-      print('📄 Corpo da resposta: ${response.body}');
+    
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
+        
+        // Se for professor, não retorna token, só user
+        if (role == 'professor') {
+          return LoginResponse(
+            token: '', // Token vazio para professores
+            user: User.fromJson(data['user']),
+          );
+        }
+
+        // Para aluno/admin, fluxo normal
         final loginResponse = LoginResponse.fromJson(data);
         
-        // Salvar dados localmente
+        // Salvar dados localmente apenas se não for professor
         await _saveData(loginResponse.token, loginResponse.user);
         
         return loginResponse;
@@ -177,7 +181,6 @@ class AuthService {
         );
       }
     } catch (e) {
-      print('Erro no logout da API: $e');
     } finally {
       // Limpar dados locais
       final prefs = await SharedPreferences.getInstance();

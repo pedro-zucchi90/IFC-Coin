@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config.dart';
 import '../providers/auth_provider.dart';
 import 'como_ganhar.dart';
 import 'faq.dart';
@@ -7,7 +8,9 @@ import 'tela_login.dart';
 import 'metas_screen.dart';
 import 'admin_metas_screen.dart';
 import 'admin_conquistas_screen.dart';
+import 'admin_solicitacoes_professores_screen.dart';
 import 'perfil_screen.dart';
+import '../widgets/user_avatar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -43,8 +46,8 @@ class HomeScreen extends StatelessWidget {
           ),
           Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
-              final user = authProvider.user;
-              return GestureDetector(
+              return UserAvatar(
+                radius: 20,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -53,22 +56,6 @@ class HomeScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.grey.shade300,
-                    backgroundImage: user?.fotoPerfil != null && user!.fotoPerfil!.isNotEmpty
-                        ? NetworkImage(user.fotoPerfil!)
-                        : null,
-                    child: user?.fotoPerfil == null || user!.fotoPerfil!.isEmpty
-                        ? Icon(
-                            Icons.person,
-                            color: Colors.grey.shade600,
-                          )
-                        : null,
-                  ),
-                ),
               );
             },
           ),
@@ -139,11 +126,6 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Corresponde a 40 horas',
-                    style: TextStyle(fontSize: 20, color: Color.fromARGB(221, 243, 243, 243)),
-                  ),
                 ],
               ),
             ),
@@ -163,6 +145,94 @@ class HomeScreen extends StatelessWidget {
                 final isAdmin = authProvider.isAdmin;
                 final isProfessor = authProvider.isProfessor;
                 
+                List<Widget> cards = [
+                  _HomeCard(
+                    icon: Icons.receipt_long,
+                    iconColor: Color(0xFFE53935),
+                    title: 'Histórico de Transações',
+                    textColor: Color(0xFFE53935),
+                    onTap: () {},
+                  ),
+                  _HomeCard(
+                    icon: Icons.attach_money,
+                    iconColor: Color(0xFF388E3C),
+                    title: 'Como Ganhar Coins',
+                    textColor: Color(0xFF388E3C),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ComoGanharScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _HomeCard(
+                    icon: Icons.check_circle_outline,
+                    iconColor: Color(0xFF1976D2),
+                    title: isAdmin ? 'Gerenciar Metas' : 'Metas',
+                    textColor: Color(0xFF1976D2),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => isAdmin 
+                              ? const AdminMetasScreen()
+                              : const MetasScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _HomeCard(
+                    icon: Icons.help_outline,
+                    iconColor: Color(0xFF9C27B0),
+                    title: 'FAQ',
+                    textColor: Color(0xFF9C27B0),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FAQScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ];
+
+                // Adicionar botões específicos para admin
+                if (isAdmin) {
+                  cards.addAll([
+                    _HomeCard(
+                      icon: Icons.person_add,
+                      iconColor: Color(0xFFFF9800),
+                      title: 'Solicitações de\nProfessores',
+                      textColor: Color(0xFFFF9800),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdminSolicitacoesProfessoresScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _HomeCard(
+                      icon: Icons.emoji_events,
+                      iconColor: Color(0xFF9C27B0),
+                      title: 'Gerenciar\nConquistas',
+                      textColor: Color(0xFF9C27B0),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdminConquistasScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ]);
+                }
+                
                 return GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -170,63 +240,11 @@ class HomeScreen extends StatelessWidget {
                   mainAxisSpacing: 14,
                   crossAxisSpacing: 14,
                   childAspectRatio: 1.2,
-                  children: [
-                    _HomeCard(
-                      icon: Icons.receipt_long,
-                      iconColor: Color(0xFFE53935),
-                      title: 'Histórico de Transações',
-                      textColor: Color(0xFFE53935),
-                      onTap: () {},
-                    ),
-                    _HomeCard(
-                      icon: Icons.attach_money,
-                      iconColor: Color(0xFF388E3C),
-                      title: 'Como Ganhar Coins',
-                      textColor: Color(0xFF388E3C),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ComoGanharScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _HomeCard(
-                      icon: Icons.check_circle_outline,
-                      iconColor: Color(0xFF1976D2),
-                      title: isAdmin ? 'Gerenciar Metas' : 'Metas',
-                      textColor: Color(0xFF1976D2),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => isAdmin 
-                                ? const AdminMetasScreen()
-                                : const MetasScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _HomeCard(
-                      icon: Icons.help_outline,
-                      iconColor: Color(0xFF9C27B0),
-                      title: 'FAQ',
-                      textColor: Color(0xFF9C27B0),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const FAQScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                  children: cards,
                 );
               },
             ),
-            const SizedBox(height: 100),
+            const SizedBox(height: 55),
             const Text(
               'IFC Coin: Sua moeda digital\npor horas de dedicação na instituição.',
               style: TextStyle(fontSize: 20, color: Colors.black54),

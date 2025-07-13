@@ -8,6 +8,7 @@ class User {
   final List<String> turmas;
   final int saldo;
   final String? fotoPerfil;
+  final String? statusAprovacao;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -21,6 +22,7 @@ class User {
     required this.turmas,
     required this.saldo,
     this.fotoPerfil,
+    this.statusAprovacao,
     this.createdAt,
     this.updatedAt,
   });
@@ -36,6 +38,7 @@ class User {
       turmas: List<String>.from(json['turmas'] ?? []),
       saldo: json['saldo'] ?? 0,
       fotoPerfil: json['fotoPerfil'],
+      statusAprovacao: json['statusAprovacao'],
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt']) 
           : null,
@@ -56,6 +59,7 @@ class User {
       'turmas': turmas,
       'saldo': saldo,
       'fotoPerfil': fotoPerfil,
+      'statusAprovacao': statusAprovacao,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -71,6 +75,7 @@ class User {
     List<String>? turmas,
     int? saldo,
     String? fotoPerfil,
+    String? statusAprovacao,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -84,6 +89,7 @@ class User {
       turmas: turmas ?? this.turmas,
       saldo: saldo ?? this.saldo,
       fotoPerfil: fotoPerfil ?? this.fotoPerfil,
+      statusAprovacao: statusAprovacao ?? this.statusAprovacao,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -110,16 +116,19 @@ class LoginRequest {
 class LoginResponse {
   final String token;
   final User user;
+  final bool showApprovalNotification;
 
   LoginResponse({
     required this.token,
     required this.user,
+    this.showApprovalNotification = false,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
       token: json['token'],
       user: User.fromJson(json['user']),
+      showApprovalNotification: json['showApprovalNotification'] ?? false,
     );
   }
 } 

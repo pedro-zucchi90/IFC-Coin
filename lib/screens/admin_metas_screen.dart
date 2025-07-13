@@ -346,7 +346,8 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
     );
   }
 
-  Future<void> _deletarMeta(Goal meta) async {
+  Future<void> _editarMeta(Goal meta) async {
+    await context.read<AuthProvider>().initialize();
     final confirmacao = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -524,7 +525,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton.icon(
-                                        onPressed: () => _deletarMeta(meta),
+                                        onPressed: () => _editarMeta(meta),
                                         icon: const Icon(Icons.delete),
                                         label: const Text('Deletar'),
                                         style: ElevatedButton.styleFrom(

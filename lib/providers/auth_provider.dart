@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import '../models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final NotificationService _notificationService = NotificationService();
   
   bool _isLoading = false;
   String? _error;
@@ -39,21 +41,34 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Login
-  Future<bool> login(String matricula, String senha) async {
+  Future<Map<String, dynamic>> login(String matricula, String senha) async {
     _setLoading(true);
     _error = null;
     
     try {
       final response = await _authService.login(matricula, senha);
       _user = response.user;
+      
       notifyListeners();
-      return true;
+      return {
+        'success': true,
+        'showApprovalNotification': response.showApprovalNotification,
+      };
     } catch (e) {
-      _error = e.toString();
+      String msg = e.toString().toLowerCase();
+      if (msg.contains('matrícula') || msg.contains('senha') || msg.contains('incorret')) {
+        _error = 'Matrícula ou senha incorretos';
+      } else {
+        _error = 'Ocorreu um erro. Tente novamente.';
+      }
       notifyListeners();
-      return false;
+      return {
+        'success': false,
+        'showApprovalNotification': false,
+      };
     } finally {
       _setLoading(false);
+      notifyListeners(); // Garante atualização mesmo em erro
     }
   }
 
@@ -80,15 +95,32 @@ class AuthProvider extends ChangeNotifier {
         curso: curso,
         turmas: turmas,
       );
+      
+      // Se for professor, não fazer login automático (aguarda aprovação)
+      if (role == 'professor') {
+        // Não fazer login automático, mas retornar true para mostrar sucesso
+        return true; // Retorna true para mostrar mensagem de sucesso
+      }
+      
+      // Para alunos e admins, fazer login normal
       _user = response.user;
+      
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      String msg = e.toString().toLowerCase();
+      if (msg.contains('matrícula') || msg.contains('email') || msg.contains('já cadastrad') || msg.contains('em uso')) {
+        _error = 'Matrícula ou email já estão em uso';
+      } else if (msg.contains('senha')) {
+        _error = 'A senha deve ter pelo menos 6 caracteres';
+      } else {
+        _error = 'Ocorreu um erro. Tente novamente.';
+      }
       notifyListeners();
       return false;
     } finally {
       _setLoading(false);
+      notifyListeners(); // Garante atualização mesmo em erro
     }
   }
 

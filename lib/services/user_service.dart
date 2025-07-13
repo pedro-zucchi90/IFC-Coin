@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'auth_service.dart';
 import '../config.dart';
 
@@ -13,95 +14,38 @@ class UserService {
     required String nome,
     required String email,
     String? curso,
+    File? fotoPerfilFile, // agora recebe o arquivo
   }) async {
     try {
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/user/perfil'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'nome': nome,
-          'email': email,
-          'curso': curso,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Erro ao atualizar perfil');
-      }
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Erro de conexão: $e');
-    }
-  }
-
-  // Obter saldo do usuário
-  Future<int> obterSaldo() async {
-    try {
-      final token = _authService.token;
-      if (token == null) throw Exception('Usuário não autenticado');
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/user/saldo'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['saldo'];
-      } else {
-        throw Exception('Erro ao obter saldo');
-      }
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Erro de conexão: $e');
-    }
-  }
-
-  // Upload de foto de perfil
-  Future<String> uploadFotoPerfil(File imageFile) async {
-    try {
-      final token = _authService.token;
-      if (token == null) throw Exception('Usuário não autenticado');
-
-      // Criar request multipart
       var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/user/foto-perfil'),
+        'PUT',
+        Uri.parse('$baseUrl/user/perfil'),
       );
-
-      // Adicionar headers
       request.headers['Authorization'] = 'Bearer $token';
-
-      // Adicionar arquivo
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'foto',
-          imageFile.path,
-        ),
-      );
+      request.fields['nome'] = nome;
+      request.fields['email'] = email;
+      if (curso != null && curso.trim().isNotEmpty) request.fields['curso'] = curso;
+      if (fotoPerfilFile != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'fotoPerfil',
+          fotoPerfilFile.path,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
 
       final response = await request.send();
-      final responseData = await response.stream.bytesToString();
+      final responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(responseData);
-        // Retornar URL completa da foto
-        return '$baseUrl${data['fotoPerfil']}';
+        // O backend deve retornar o novo caminho de fotoPerfil no usuário atualizado
+        // Você pode atualizar o usuário local aqui se quiser
+        return true;
       } else {
-        final errorData = jsonDecode(responseData);
-        throw Exception(errorData['message'] ?? 'Erro ao fazer upload da foto');
+        final errorData = jsonDecode(responseBody);
+        throw Exception(errorData['message'] ?? 'Erro ao atualizar perfil');
       }
     } catch (e) {
       if (e is Exception) rethrow;

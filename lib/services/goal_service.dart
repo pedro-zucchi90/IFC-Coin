@@ -152,6 +152,7 @@ class GoalService {
   }) async {
     try {
       final token = _authService.token;
+      final user = _authService.currentUser;
       if (token == null) throw Exception('Usuário não autenticado');
 
       final response = await http.put(
@@ -183,6 +184,7 @@ class GoalService {
   Future<void> deletarMeta(String metaId) async {
     try {
       final token = _authService.token;
+      final user = _authService.currentUser;
       if (token == null) throw Exception('Usuário não autenticado');
 
       final response = await http.delete(

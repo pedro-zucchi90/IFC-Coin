@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/user_avatar.dart';
+import 'perfil_screen.dart';
 
 class FAQScreen extends StatefulWidget {
   const FAQScreen({Key? key}) : super(key: key);
@@ -59,9 +61,19 @@ class _FAQScreenState extends State<FAQScreen> {
             icon: const Icon(Icons.qr_code, color: Colors.black, size: 40),
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.account_circle_outlined, color: Colors.black, size: 40,),
-            onPressed: () {},
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: UserAvatar(
+              radius: 20,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PerfilScreen(),
+                  ),
+                );
+              },
+            ),
           ),
         ],
         ),

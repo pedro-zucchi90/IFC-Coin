@@ -37,6 +37,7 @@ dependencies:
   
   # HTTP requests
   http: ^1.1.0
+  http_parser: ^4.0.0
   
   # JWT token handling
   jwt_decoder: ^2.0.1
@@ -53,6 +54,9 @@ dependencies:
   # Image picker for profile photos
   image_picker: ^1.0.4
   image_cropper: ^9.1.0
+
+  # Notificações locais 
+  flutter_local_notifications: ^17.0.0
 
 dev_dependencies:
   flutter_test:

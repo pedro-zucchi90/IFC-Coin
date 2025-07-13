@@ -16,7 +16,24 @@ const verificarToken = async (req, res, next) => {
         const token = authHeader.substring(7); // Remove 'Bearer ' do início
 
         // Verificar e decodificar o token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            if (err.name === 'JsonWebTokenError') {
+                return res.status(401).json({
+                    message: 'Token inválido'
+                });
+            }
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    message: 'Token expirado'
+                });
+            }
+            return res.status(401).json({
+                message: 'Token inválido ou expirado'
+            });
+        }
         
         // Buscar o usuário no banco
         const user = await User.findById(decoded.userId).select('-senha');
@@ -34,21 +51,13 @@ const verificarToken = async (req, res, next) => {
         }
 
         // Adicionar o usuário ao request
-        req.user = user;
+        req.user = {
+            ...user.toPublicJSON(),
+            _id: user._id,
+            role: user.role
+        };
         next();
     } catch (error) {
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                message: 'Token inválido'
-            });
-        }
-        
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                message: 'Token expirado'
-            });
-        }
-
         console.error('Erro na verificação do token:', error);
         return res.status(500).json({
             message: 'Erro interno do servidor'
