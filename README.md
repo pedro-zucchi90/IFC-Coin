@@ -18,7 +18,7 @@ O **IFC Coin** é um sistema de gamificação para instituições de ensino, com
 
 ---
 
-## Funcionalidades 🚀
+## Funcionalidades
 
 - **Sistema de Metas e Conquistas**: Criação, gerenciamento e conclusão de metas, com recompensas automáticas em coins.
 - **Aprovação de Professores**: Professores precisam ser aprovados por um admin antes de acessar funcionalidades exclusivas.
