@@ -4,7 +4,7 @@ const User = require('../models/userModel');
 // Middleware para verificar token JWT
 const verificarToken = async (req, res, next) => {
     try {
-        // Pegar o token do header Authorization
+        //pegar o token do header Authorization
         const authHeader = req.headers.authorization;
         
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,7 +15,7 @@ const verificarToken = async (req, res, next) => {
 
         const token = authHeader.substring(7); // Remove 'Bearer ' do início
 
-        // Verificar e decodificar o token
+        //verificar e decodificar o token
         let decoded;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -50,7 +50,7 @@ const verificarToken = async (req, res, next) => {
             });
         }
 
-        // Adicionar o usuário ao request
+        //adicionar o usuário ao request
         req.user = {
             ...user.toPublicJSON(),
             _id: user._id,

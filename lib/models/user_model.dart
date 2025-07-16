@@ -1,16 +1,17 @@
+// Modelo de dados do usuário utilizado no app Flutter
 class User {
-  final String? id;
-  final String nome;
-  final String email;
-  final String matricula;
-  final String role;
-  final String? curso;
-  final List<String> turmas;
-  final int saldo;
-  final String? fotoPerfil;
-  final String? statusAprovacao;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final String? id; // ID do usuário (MongoDB)
+  final String nome; // Nome completo
+  final String email; // Email
+  final String matricula; // Matrícula institucional
+  final String role; // Papel: aluno, professor ou admin
+  final String? curso; // Curso (apenas para alunos)
+  final List<String> turmas; // Lista de turmas
+  final int saldo; // Saldo de coins
+  final String? fotoPerfil; // URL ou caminho da foto de perfil
+  final String? statusAprovacao; // Status de aprovação (professor)
+  final DateTime? createdAt; // Data de criação
+  final DateTime? updatedAt; // Data de atualização
 
   User({
     this.id,
@@ -27,6 +28,7 @@ class User {
     this.updatedAt,
   });
 
+  // Cria um User a partir de um JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['_id'],
@@ -48,6 +50,7 @@ class User {
     );
   }
 
+  // Converte o User para JSON
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -65,6 +68,7 @@ class User {
     };
   }
 
+  // Cria uma cópia do usuário com campos modificados
   User copyWith({
     String? id,
     String? nome,
@@ -96,6 +100,7 @@ class User {
   }
 }
 
+// Classe auxiliar para requisição de login
 class LoginRequest {
   final String matricula;
   final String senha;
@@ -113,6 +118,7 @@ class LoginRequest {
   }
 }
 
+// Classe auxiliar para resposta de login
 class LoginResponse {
   final String token;
   final User user;

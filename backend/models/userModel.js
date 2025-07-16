@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Schema do usuário, define a estrutura dos documentos na coleção 'users'
 const userSchema = new mongoose.Schema({
     nome: {
         type: String,
@@ -13,7 +14,7 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Email é obrigatório'],
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
+        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido'] // Regex para validar email
     },
     senha: {
         type: String,
@@ -29,7 +30,7 @@ const userSchema = new mongoose.Schema({
     role: { 
         type: String, 
         enum: ['aluno', 'professor', 'admin'], 
-        default: 'aluno' 
+        default: 'aluno' // Define o tipo de usuário
     },
     statusAprovacao: {
         type: String,
@@ -43,10 +44,11 @@ const userSchema = new mongoose.Schema({
         type: String, 
         enum: ['Engenharia de Alimentos', 'Agropecuária', 'Informática para Internet'],
         required: function() {
+            // Curso é obrigatório apenas para alunos
             return this.role === 'aluno';
         }
     },
-    turmas: [String],
+    turmas: [String], // Lista de turmas do usuário
     saldo: { 
         type: Number, 
         default: 0,
@@ -54,30 +56,30 @@ const userSchema = new mongoose.Schema({
     },
     fotoPerfil: { 
         type: String, 
-        default: '' 
+        default: '' // URL ou caminho da foto de perfil
     },
     fotoPerfilBin: {
         type: Buffer,
-        select: false // não retorna por padrão
+        select: false // Não retorna por padrão (usado para armazenar binário da imagem)
     },
     ultimoLogin: {
         type: Date,
-        default: Date.now
+        default: Date.now // Data do último login
     },
     ativo: {
         type: Boolean,
-        default: true
+        default: true // Usuário ativo ou não
     }
 }, 
-{ timestamps: true });
+{ timestamps: true }); // Adiciona createdAt e updatedAt automaticamente
 
-// Middleware para hash da senha antes de salvar
+// Middleware para hash da senha antes de salvar o usuário
 userSchema.pre('save', async function(next) {
-    // Só hash a senha se ela foi modificada (ou é nova)
+    // Só faz hash se a senha foi modificada ou é novo usuário
     if (!this.isModified('senha')) return next();
     
     try {
-        // Hash da senha com salt de 12 rounds
+        // Gera salt e faz hash da senha
         const salt = await bcrypt.genSalt(12);
         this.senha = await bcrypt.hash(this.senha, salt);
         next();
@@ -86,12 +88,12 @@ userSchema.pre('save', async function(next) {
     }
 });
 
-// Método para comparar senhas
+// Método de instância para comparar senha informada com a salva (hash)
 userSchema.methods.compararSenha = async function(senhaCandidata) {
     return await bcrypt.compare(senhaCandidata, this.senha);
 };
 
-// Método para adicionar coins
+// Método para adicionar coins ao saldo do usuário
 userSchema.methods.adicionarCoins = function(quantidade) {
     if (quantidade > 0) {
         this.saldo += quantidade;
@@ -100,7 +102,7 @@ userSchema.methods.adicionarCoins = function(quantidade) {
     throw new Error('Quantidade deve ser positiva');
 };
 
-// Método para remover coins
+// Método para remover coins do saldo do usuário
 userSchema.methods.removerCoins = function(quantidade) {
     if (quantidade > 0 && this.saldo >= quantidade) {
         this.saldo -= quantidade;
@@ -109,13 +111,13 @@ userSchema.methods.removerCoins = function(quantidade) {
     throw new Error('Saldo insuficiente ou quantidade inválida');
 };
 
-// Método para atualizar último login
+// Método para atualizar a data do último login
 userSchema.methods.atualizarUltimoLogin = function() {
     this.ultimoLogin = new Date();
     return this.save();
 };
 
-// Método para retornar dados públicos (sem senha)
+// Método para retornar os dados públicos do usuário (sem senha e foto binária)
 userSchema.methods.toPublicJSON = function() {
     const userObject = this.toObject();
     delete userObject.senha;
@@ -123,11 +125,9 @@ userSchema.methods.toPublicJSON = function() {
     return userObject;
 };
 
-// Índices para melhor performance
-// Remover índices duplicados para email e matricula, pois já estão definidos como unique no campo
-// userSchema.index({ email: 1 });
-// userSchema.index({ matricula: 1 });
+// Índices para melhorar performance em buscas por role e ativo
 userSchema.index({ role: 1 });
 userSchema.index({ ativo: 1 });
 
+// Exporta o modelo User para ser usado em outras partes do projeto
 module.exports = mongoose.model('User', userSchema);

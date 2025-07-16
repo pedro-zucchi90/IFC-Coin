@@ -1,98 +1,118 @@
-# IFC Coin - Estrutura do Projeto
+# IFC Coin
 
-Este projeto é composto por um backend Node.js e um frontend Flutter. Abaixo está a estrutura de diretórios e exemplos dos principais arquivos de cada parte:
-
-```
-IFC-Coin-testes/
-├── android/                # Projeto Android nativo (gerado pelo Flutter)
-│   └── ...
-├── assets/                 # Imagens e recursos estáticos
-│   ├── ifc_coin_logo.png
-│   └── ifc_coin_logo - Copia.png
-├── backend/                # Backend Node.js (API, modelos, rotas, etc)
-│   ├── data/
-│   │   └── ...             # Dados do banco (MongoDB)
-│   ├── middleware/
-│   │   └── auth.js         # Middleware de autenticação
-│   ├── models/
-│   │   ├── achievementModel.js
-│   │   ├── goalModel.js
-│   │   ├── transactionModel.js
-│   │   └── userModel.js
-│   ├── routes/
-│   │   ├── achievement.js
-│   │   ├── auth.js
-│   │   ├── goal.js
-│   │   ├── transaction.js
-│   │   └── user.js
-│   ├── scripts/
-│   │   └── seed.js         # Script para popular o banco
-│   ├── server.js           # Ponto de entrada do backend
-│   ├── package.json        # Dependências do backend
-│   └── ...
-├── ios/                    # Projeto iOS nativo (gerado pelo Flutter)
-│   └── ...
-├── lib/                    # Código principal do app Flutter
-│   ├── config.dart         # Configurações globais (ex: baseUrl)
-│   ├── main.dart           # Ponto de entrada do app Flutter
-│   ├── models/
-│   │   ├── achievement_model.dart
-│   │   ├── goal_model.dart
-│   │   └── user_model.dart
-│   ├── particle_background.dart # Efeito visual de fundo
-│   ├── providers/
-│   │   └── auth_provider.dart
-│   ├── screens/
-│   │   ├── admin_conquistas_screen.dart
-│   │   ├── admin_metas_screen.dart
-│   │   ├── como_ganhar.dart
-│   │   ├── conquistas_screen.dart
-│   │   ├── faq.dart
-│   │   ├── home.dart
-│   │   ├── metas_screen.dart
-│   │   ├── perfil_screen.dart
-│   │   ├── primeira_tela.dart
-│   │   ├── tela_aluno_criar_conta.dart
-│   │   ├── tela_login.dart
-│   │   └── tela_professor_criar_conta.dart
-│   ├── services/
-│   │   ├── achievement_service.dart
-│   │   ├── auth_service.dart
-│   │   ├── goal_service.dart
-│   │   └── user_service.dart
-│   └── ...
-├── linux/                  # Projeto Linux (gerado pelo Flutter)
-│   └── ...
-├── macos/                  # Projeto macOS (gerado pelo Flutter)
-│   └── ...
-├── test/                   # Testes do Flutter
-│   └── widget_test.dart
-├── web/                    # Projeto Web (gerado pelo Flutter)
-│   ├── favicon.png
-│   ├── index.html
-│   ├── manifest.json
-│   └── icons/
-│       └── ...
-├── windows/                # Projeto Windows (gerado pelo Flutter)
-│   └── ...
-├── pubspec.yaml            # Dependências do Flutter
-├── README.md               # Este arquivo
-└── ...
-```
-
-## Descrição das principais pastas/arquivos
-
-- **backend/**: Código do servidor Node.js, responsável pela API REST, autenticação, regras de negócio e persistência de dados.
-- **lib/**: Código Dart do app Flutter, incluindo telas, modelos, providers e serviços.
-- **assets/**: Imagens e ícones usados no app.
-- **android/**, **ios/**, **linux/**, **macos/**, **windows/**, **web/**: Códigos gerados automaticamente pelo Flutter para cada plataforma.
-- **pubspec.yaml**: Gerenciador de dependências do Flutter.
-
-## Como rodar o projeto
-
-1. **Backend**: Entre na pasta `backend/` e siga as instruções para instalar dependências e rodar o servidor Node.js.
-2. **Frontend**: No diretório raiz, rode `flutter pub get` e depois `flutter run` para iniciar o app.
+<div align="center">
+  <img src="assets/ifc_coin_logo.png" width="120" alt="IFC Coin Logo"/>
+  <br/><br/>
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white">
+  <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white">
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white">
+  <img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white">
+  <img src="https://img.shields.io/badge/REST%20API-005571?style=for-the-badge">
+</div>
 
 ---
 
-Se precisar de mais detalhes sobre cada parte, consulte os arquivos e comentários no código.
+## Visão Geral
+
+O **IFC Coin** é um sistema de gamificação para instituições de ensino, composto por um backend Node.js (API REST) e um app Flutter multiplataforma. Alunos e professores acumulam moedas virtuais ao participarem de atividades, eventos e projetos.
+
+---
+
+## Funcionalidades 🚀
+
+- **Sistema de Metas e Conquistas**: Criação, gerenciamento e conclusão de metas, com recompensas automáticas em coins.
+- **Aprovação de Professores**: Professores precisam ser aprovados por um admin antes de acessar funcionalidades exclusivas.
+- **Notificações Locais**: Alerta de conquistas, aprovações e metas concluídas diretamente no app.
+- **Histórico de Transações**: Visualização detalhada de todas as moedas recebidas/enviadas.
+- **Gestão de Usuários**: Perfis de aluno, professor e admin, com permissões diferenciadas.
+- **Evidências para Metas**: Possibilidade de exigir foto, documento ou texto como comprovação para conclusão de metas.
+- **Filtro e Busca de Metas/Conquistas**: Filtragem por tipo, categoria e status.
+- **Login Seguro com JWT**: Autenticação robusta e armazenamento seguro de tokens.
+- **Upload de Foto de Perfil**: Usuários podem personalizar seu avatar.
+- **Administração via Painel**: Telas exclusivas para admins gerenciarem conquistas, metas e solicitações de professores.
+
+---
+
+## Estrutura do Projeto
+
+```plaintext
+backend/
+├── server.js
+├── env.example
+├── package.json
+├── package-lock.json
+├── scripts/
+│   ├── update_users_status.js
+│   ├── seed.js
+│   └── add_solicitacao_professores.js
+├── routes/
+│   ├── user.js
+│   ├── admin.js
+│   ├── auth.js
+│   ├── goal.js
+│   ├── achievement.js
+│   └── transaction.js
+├── data/
+├── models/
+│   ├── userModel.js
+│   ├── goalModel.js
+│   ├── achievementModel.js
+│   └── transactionModel.js
+├── middleware/
+│   └── auth.js
+
+lib/
+├── main.dart
+├── config.dart
+├── particle_background.dart
+├── widgets/
+│   └── user_avatar.dart
+├── services/
+│   ├── user_service.dart
+│   ├── notification_service.dart
+│   ├── auth_service.dart
+│   ├── goal_service.dart
+│   ├── achievement_service.dart
+│   └── admin_service.dart
+├── screens/
+│   ├── perfil_screen.dart
+│   ├── como_ganhar.dart
+│   ├── faq.dart
+│   ├── metas_screen.dart
+│   ├── conquistas_screen.dart
+│   ├── home.dart
+│   ├── admin_conquistas_screen.dart
+│   ├── admin_metas_screen.dart
+│   ├── admin_solicitacoes_professores_screen.dart
+│   ├── tela_professor_criar_conta.dart
+│   ├── tela_login.dart
+│   ├── tela_aluno_criar_conta.dart
+│   └── primeira_tela.dart
+├── models/
+│   ├── user_model.dart
+│   ├── goal_model.dart
+│   └── achievement_model.dart
+├── providers/
+│   └── auth_provider.dart
+```
+
+---
+
+## Como rodar o projeto
+
+### Backend (Node.js)
+```bash
+cd backend
+npm install
+npm start
+```
+
+### Frontend (Flutter)
+```bash
+flutter pub get
+flutter run
+```
+
+---
+
+Se tiver mais dúvidas, consulte os comentários no código.

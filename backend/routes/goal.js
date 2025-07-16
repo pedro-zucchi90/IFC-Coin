@@ -1,3 +1,4 @@
+// Rotas relacionadas a metas (Goal)
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -8,7 +9,7 @@ const { verificarToken, verificarAdmin, verificarProfessor } = require('../middl
 
 const router = express.Router();
 
-// Configuração do multer para upload de evidências
+// Configuração do multer para upload de evidências de metas
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = 'uploads/evidencias';
@@ -18,6 +19,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
+    // Gera nome único para o arquivo
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'evidencia-' + req.user._id + '-' + uniqueSuffix + path.extname(file.originalname));
   }
@@ -26,9 +28,10 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: 10 * 1024 * 1024, // Limite de 10MB
   },
   fileFilter: function (req, file, cb) {
+    // Permite apenas tipos específicos de arquivos
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
@@ -44,23 +47,24 @@ router.get('/listar', verificarToken, async (req, res) => {
         const { tipo, page = 1, limit = 10 } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        // Construir filtros - apenas metas ativas e válidas
+        // Filtros: apenas metas ativas e válidas
         const filtros = { ativo: true };
         if (tipo) filtros.tipo = tipo;
 
-        // Verificar validade temporal
+        // Validade temporal: metas sem data de fim ou com data de fim futura
         const agora = new Date();
         filtros.$or = [
-            { dataFim: null }, // Sem data de fim
-            { dataFim: { $gte: agora } } // Data de fim no futuro
+            { dataFim: null },
+            { dataFim: { $gte: agora } }
         ];
 
+        // Busca metas no banco
         const metas = await Goal.find(filtros)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(parseInt(limit));
 
-        // Verificar se o usuário já concluiu cada meta
+        // Marca se o usuário já concluiu cada meta
         const metasComStatus = await Promise.all(metas.map(async (meta) => {
             const usuarioConcluiu = meta.usuariosConcluidos.includes(req.user._id);
             return {
@@ -89,7 +93,7 @@ router.get('/listar', verificarToken, async (req, res) => {
     }
 });
 
-// GET /api/goal/minhas - Metas do usuário logado
+// GET /api/goal/minhas - Listar metas concluídas pelo usuário logado
 router.get('/minhas', verificarToken, async (req, res) => {
     try {
         const metas = await Goal.find({
@@ -106,11 +110,12 @@ router.get('/minhas', verificarToken, async (req, res) => {
     }
 });
 
-// POST /api/goal/criar - Criar nova meta (admin/professor)
+// POST /api/goal/criar - Criar nova meta (professor/admin)
 router.post('/criar', verificarProfessor, async (req, res) => {
     try {
         const { titulo, descricao, tipo, requisito, recompensa } = req.body;
 
+        // Validação dos campos obrigatórios
         if (!titulo || !descricao || !tipo || !requisito || !recompensa) {
             return res.status(400).json({
                 message: 'Todos os campos são obrigatórios'
@@ -123,6 +128,7 @@ router.post('/criar', verificarProfessor, async (req, res) => {
             });
         }
 
+        // Cria nova meta
         const novaMeta = new Goal({
             titulo: titulo.trim(),
             descricao: descricao.trim(),
@@ -158,28 +164,28 @@ router.post('/concluir/:id', verificarToken, async (req, res) => {
             });
         }
 
-        // Verificar se a meta está ativa
+        // Verifica se a meta está ativa
         if (!meta.ativo) {
             return res.status(400).json({
                 message: 'Meta não está mais ativa'
             });
         }
 
-        // Verificar se já concluiu
+        // Verifica se o usuário já concluiu
         if (meta.usuariosConcluidos.includes(req.user._id)) {
             return res.status(400).json({
                 message: 'Meta já foi concluída'
             });
         }
 
-        // Adicionar usuário à lista de concluídos da meta
+        // Adiciona usuário à lista de concluídos
         meta.usuariosConcluidos.push(req.user._id);
         await meta.save();
 
-        // Adicionar recompensa ao usuário
+        // Adiciona recompensa ao usuário
         await req.user.adicionarCoins(meta.recompensa);
 
-        // Criar transação de recompensa
+        // Cria transação de recompensa
         const Transaction = require('../models/transactionModel');
         const transacao = new Transaction({
             tipo: 'recebido',
@@ -218,7 +224,7 @@ router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
             });
         }
 
-        // Atualizar campos
+        // Atualiza campos
         if (titulo) meta.titulo = titulo.trim();
         if (descricao) meta.descricao = descricao.trim();
         if (tipo) meta.tipo = tipo;
@@ -276,7 +282,7 @@ router.get('/:id', verificarToken, async (req, res) => {
             });
         }
 
-        // Verificar se o usuário já concluiu
+        // Verifica se o usuário já concluiu
         const usuarioConcluiu = meta.usuariosConcluidos.includes(req.user._id);
         
         res.json({
