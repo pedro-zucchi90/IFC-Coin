@@ -1,7 +1,7 @@
 # IFC Coin
 
 <div align="center">
-  <img src="assets/ifc_coin_logo.png" width="200" alt="IFC Coin Logo"/>
+  <img src="assets/ifc_coin_logo.png" width="400" alt="IFC Coin Logo"/>
   <br/><br/>
   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white">
   <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white">
