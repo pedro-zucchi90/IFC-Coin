@@ -4,6 +4,12 @@ const { verificarToken, verificarAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Log para todas as requisições na rota de conquistas
+router.use((req, res, next) => {
+  console.log('LOG NA ROTA DE CONQUISTAS:', req.method, req.url, req.headers.authorization);
+  next();
+});
+
 // GET /api/achievement/listar - Listar conquistas disponíveis
 router.get('/listar', verificarToken, async (req, res) => {
     try {
@@ -56,6 +62,7 @@ router.get('/categorias', verificarToken, async (req, res) => {
 
 // POST /api/achievement/criar - Criar nova conquista (admin)
 router.post('/criar', verificarAdmin, async (req, res) => {
+    console.log('Tentativa de criar conquista:', req.user, req.headers.authorization);
     try {
         const { nome, descricao, tipo, categoria, icone, requisitos } = req.body;
 
@@ -90,7 +97,8 @@ router.post('/criar', verificarAdmin, async (req, res) => {
 });
 
 // PUT /api/achievement/:id - Atualizar conquista (admin)
-router.put('/:id', verificarAdmin, async (req, res) => {
+router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
+    console.log('Tentativa de editar conquista:', req.user, req.headers.authorization);
     try {
         const { nome, descricao, tipo, categoria, icone, requisitos } = req.body;
         const conquistaId = req.params.id;
@@ -126,7 +134,8 @@ router.put('/:id', verificarAdmin, async (req, res) => {
 });
 
 // DELETE /api/achievement/:id - Deletar conquista (admin)
-router.delete('/:id', verificarAdmin, async (req, res) => {
+router.delete('/:id', verificarToken, verificarAdmin, async (req, res) => {
+    console.log('Tentativa de deletar conquista:', req.user, req.headers.authorization);
     try {
         const conquista = await Achievement.findById(req.params.id);
 

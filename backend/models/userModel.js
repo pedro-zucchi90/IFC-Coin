@@ -60,18 +60,18 @@ const userSchema = new mongoose.Schema({
     },
     fotoPerfilBin: {
         type: Buffer,
-        select: false // Não retorna por padrão (usado para armazenar binário da imagem)
+        select: false //não retorna por padrão
     },
     ultimoLogin: {
         type: Date,
-        default: Date.now // Data do último login
+        default: Date.now //daata do último login
     },
     ativo: {
         type: Boolean,
-        default: true // Usuário ativo ou não
+        default: true //usuário ativo ou não
     }
 }, 
-{ timestamps: true }); // Adiciona createdAt e updatedAt automaticamente
+{ timestamps: true }); //adiciona createdAt e updatedAt automaticamente
 
 // Middleware para hash da senha antes de salvar o usuário
 userSchema.pre('save', async function(next) {

@@ -48,7 +48,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 console.log('Tentando conectar ao MongoDB...');
 // Conecta ao banco de dados MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin')
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => {
   console.log('Conectado ao MongoDB');
 })
@@ -91,5 +91,5 @@ app.use('*', (req, res) => {
 // Inicia o servidor na porta 3000 (ou definida no .env)
 app.listen(3000, '0.0.0.0', () => {
   console.log('Servidor rodando na porta 3000');
-  console.log('API disponível em: http://192.168.0.107:3000/api');
+  console.log('API disponível em: http://0.0.0.0:3000/api');
 }); 

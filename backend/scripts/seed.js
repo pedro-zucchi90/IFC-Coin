@@ -20,8 +20,9 @@ const usuariosExemplo = [
 
 async function seedDatabase() {
     try {
+        console.log(process.env.MONGODB_URI)
         // Conectar ao MongoDB
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ifc_coin');
+        await mongoose.connect(process.env.MONGODB_URI);
 
         console.log('Conectado ao MongoDB');
 

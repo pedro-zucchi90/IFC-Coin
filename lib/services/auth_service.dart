@@ -97,7 +97,11 @@ class AuthService {
         return loginResponse;
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Erro no login');
+        String errorMsg = errorData['message'] ?? 'Erro no login';
+        if (errorData['dbError'] != null) {
+          errorMsg += '\n[DB] ${errorData['dbError']}';
+        }
+        throw Exception(errorMsg);
       }
     } catch (e) {
       if (e is Exception) rethrow;

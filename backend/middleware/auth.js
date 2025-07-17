@@ -4,8 +4,8 @@ const User = require('../models/userModel');
 // Middleware para verificar token JWT
 const verificarToken = async (req, res, next) => {
     try {
-        //pegar o token do header Authorization
-        const authHeader = req.headers.authorization;
+        const authHeader = req.headers.authorization; //pegar o token do header Authorization
+        console.log('Authorization header:', authHeader);
         
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
@@ -19,6 +19,7 @@ const verificarToken = async (req, res, next) => {
         let decoded;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET);
+            console.log('Token decodificado:', decoded);
         } catch (err) {
             if (err.name === 'JsonWebTokenError') {
                 return res.status(401).json({
@@ -37,7 +38,7 @@ const verificarToken = async (req, res, next) => {
         
         // Buscar o usuário no banco
         const user = await User.findById(decoded.userId).select('-senha');
-        
+        console.log('Usuário encontrado:', user);
         if (!user) {
             return res.status(401).json({
                 message: 'Usuário não encontrado'
@@ -99,7 +100,7 @@ const verificarTokenOpcional = async (req, res, next) => {
         const authHeader = req.headers.authorization;
         
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return next(); // Continua sem usuário
+            return next();
         }
 
         const token = authHeader.substring(7);
@@ -113,7 +114,6 @@ const verificarTokenOpcional = async (req, res, next) => {
         
         next();
     } catch (error) {
-        // Se houver erro, continua sem usuário
         next();
     }
 };

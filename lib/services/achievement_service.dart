@@ -11,6 +11,7 @@ class AchievementService {
   // Listar todas as conquistas disponíveis
   Future<List<Achievement>> listarConquistas({String? tipo, String? categoria}) async {
     try {
+      await _authService.initialize();
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
 
@@ -47,6 +48,7 @@ class AchievementService {
   // Listar categorias disponíveis
   Future<List<String>> listarCategorias() async {
     try {
+      await _authService.initialize();
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
 
@@ -72,6 +74,7 @@ class AchievementService {
   // Obter conquista específica
   Future<Achievement> obterConquista(String conquistaId) async {
     try {
+      await _authService.initialize();
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
 
@@ -104,6 +107,7 @@ class AchievementService {
     String? requisitos,
   }) async {
     try {
+      await _authService.initialize();
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
 
@@ -144,8 +148,19 @@ class AchievementService {
     String? requisitos,
   }) async {
     try {
+      await _authService.initialize();
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
+
+      // Monta o body sem campos nulos
+      final Map<String, dynamic> body = {
+        'nome': nome,
+        'descricao': descricao,
+        'tipo': tipo,
+      };
+      if (categoria != null && categoria.isNotEmpty) body['categoria'] = categoria;
+      if (icone != null && icone.isNotEmpty) body['icone'] = icone;
+      if (requisitos != null && requisitos.isNotEmpty) body['requisitos'] = requisitos;
 
       final response = await http.put(
         Uri.parse('$baseUrl/achievement/$conquistaId'),
@@ -153,14 +168,7 @@ class AchievementService {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'nome': nome,
-          'descricao': descricao,
-          'tipo': tipo,
-          'categoria': categoria,
-          'icone': icone,
-          'requisitos': requisitos,
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode != 200) {
@@ -176,6 +184,7 @@ class AchievementService {
   // Deletar uma conquista (admin)
   Future<void> deletarConquista(String conquistaId) async {
     try {
+      await _authService.initialize();
       final token = _authService.token;
       if (token == null) throw Exception('Usuário não autenticado');
 

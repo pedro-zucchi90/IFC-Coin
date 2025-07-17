@@ -59,7 +59,7 @@ class AuthProvider extends ChangeNotifier {
       if (msg.contains('matrícula') || msg.contains('senha') || msg.contains('incorret')) {
         _error = 'Matrícula ou senha incorretos';
       } else {
-        _error = 'Ocorreu um erro. Tente novamente.';
+        _error = e.toString(); // Mostra o erro detalhado do backend
       }
       notifyListeners();
       return {
@@ -114,7 +114,7 @@ class AuthProvider extends ChangeNotifier {
       } else if (msg.contains('senha')) {
         _error = 'A senha deve ter pelo menos 6 caracteres';
       } else {
-        _error = 'Ocorreu um erro. Tente novamente.';
+        _error = e.toString(); // Mostra o erro detalhado do backend
       }
       notifyListeners();
       return false;

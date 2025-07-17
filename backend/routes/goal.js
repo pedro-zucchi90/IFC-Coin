@@ -111,7 +111,7 @@ router.get('/minhas', verificarToken, async (req, res) => {
 });
 
 // POST /api/goal/criar - Criar nova meta (professor/admin)
-router.post('/criar', verificarProfessor, async (req, res) => {
+router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
     try {
         const { titulo, descricao, tipo, requisito, recompensa } = req.body;
 
@@ -247,7 +247,7 @@ router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
 });
 
 // DELETE /api/goal/:id - Deletar meta (admin)
-router.delete('/:id', verificarAdmin, async (req, res) => {
+router.delete('/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const meta = await Goal.findById(req.params.id);
 

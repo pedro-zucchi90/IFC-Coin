@@ -90,7 +90,8 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Erro no login:', error);
         res.status(500).json({
-            message: 'Erro interno do servidor'
+            message: process.env.NODE_ENV === 'development' ? (error.message + (error.stack ? '\n' + error.stack : '')) : 'Erro interno do servidor',
+            dbError: process.env.NODE_ENV === 'development' ? error : undefined
         });
     }
 });
@@ -243,7 +244,8 @@ router.post('/registro', async (req, res) => {
         }
 
         res.status(500).json({
-            message: 'Erro interno do servidor'
+            message: process.env.NODE_ENV === 'development' ? (error.message + (error.stack ? '\n' + error.stack : '')) : 'Erro interno do servidor',
+            dbError: process.env.NODE_ENV === 'development' ? error : undefined
         });
     }
 });
