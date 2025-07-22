@@ -4,12 +4,6 @@ const { verificarToken, verificarAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Log para todas as requisições na rota de conquistas
-router.use((req, res, next) => {
-  console.log('LOG NA ROTA DE CONQUISTAS:', req.method, req.url, req.headers.authorization);
-  next();
-});
-
 // GET /api/achievement/listar - Listar conquistas disponíveis
 router.get('/listar', verificarToken, async (req, res) => {
     try {

@@ -125,11 +125,11 @@ class GoalService {
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(responseData);
         return {
           'message': data['message'],
-          'requerAprovacao': data['requerAprovacao'],
+          'requerAprovacao': data.containsKey('requerAprovacao') ? data['requerAprovacao'] : false,
         };
       } else {
         final errorData = jsonDecode(responseData);
@@ -149,6 +149,7 @@ class GoalService {
     required String tipo,
     required int requisito,
     required int recompensa,
+    bool requerAprovacao = false,
   }) async {
     try {
       final token = _authService.token;
@@ -167,6 +168,7 @@ class GoalService {
           'tipo': tipo,
           'requisito': requisito,
           'recompensa': recompensa,
+          'requerAprovacao': requerAprovacao,
         }),
       );
 
@@ -212,6 +214,7 @@ class GoalService {
     required String tipo,
     required int requisito,
     required int recompensa,
+    bool requerAprovacao = false,
   }) async {
     try {
       final token = _authService.token;
@@ -229,6 +232,7 @@ class GoalService {
           'tipo': tipo,
           'requisito': requisito,
           'recompensa': recompensa,
+          'requerAprovacao': requerAprovacao,
         }),
       );
 
@@ -239,6 +243,64 @@ class GoalService {
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('Erro de conexão: $e');
+    }
+  }
+
+  // Listar solicitações de conclusão de meta (admin/professor)
+  Future<List<dynamic>> listarSolicitacoesConclusao({String? status}) async {
+    final token = _authService.token;
+    if (token == null) throw Exception('Usuário não autenticado');
+    String url = '$baseUrl/goal/solicitacoes';
+    if (status != null) {
+      url += '?status=$status';
+    }
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erro ao carregar solicitações');
+    }
+  }
+
+  // Aprovar solicitação de conclusão de meta
+  Future<void> aprovarSolicitacaoConclusao(String solicitacaoId, {String? resposta}) async {
+    final token = _authService.token;
+    if (token == null) throw Exception('Usuário não autenticado');
+    final response = await http.post(
+      Uri.parse('$baseUrl/goal/solicitacoes/$solicitacaoId/aprovar'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'resposta': resposta}),
+    );
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['message'] ?? 'Erro ao aprovar solicitação');
+    }
+  }
+
+  // Recusar solicitação de conclusão de meta
+  Future<void> recusarSolicitacaoConclusao(String solicitacaoId, {String? resposta}) async {
+    final token = _authService.token;
+    if (token == null) throw Exception('Usuário não autenticado');
+    final response = await http.post(
+      Uri.parse('$baseUrl/goal/solicitacoes/$solicitacaoId/recusar'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'resposta': resposta}),
+    );
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['message'] ?? 'Erro ao recusar solicitação');
     }
   }
 } 

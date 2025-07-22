@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const Goal = require('../models/goalModel');
 const User = require('../models/userModel');
+const GoalRequest = require('../models/goalRequestModel');
 const { verificarToken, verificarAdmin, verificarProfessor } = require('../middleware/auth');
 
 const router = express.Router();
@@ -67,9 +68,15 @@ router.get('/listar', verificarToken, async (req, res) => {
         // Marca se o usuário já concluiu cada meta
         const metasComStatus = await Promise.all(metas.map(async (meta) => {
             const usuarioConcluiu = meta.usuariosConcluidos.includes(req.user._id);
+            let temSolicitacaoPendente = false;
+            if (!usuarioConcluiu && meta.requerAprovacao) {
+                const pendente = await GoalRequest.findOne({ goal: meta._id, aluno: req.user._id, status: 'pendente' });
+                temSolicitacaoPendente = !!pendente;
+            }
             return {
                 ...meta.toObject(),
-                usuarioConcluiu
+                usuarioConcluiu,
+                temSolicitacaoPendente
             };
         }));
 
@@ -113,7 +120,7 @@ router.get('/minhas', verificarToken, async (req, res) => {
 // POST /api/goal/criar - Criar nova meta (professor/admin)
 router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
     try {
-        const { titulo, descricao, tipo, requisito, recompensa } = req.body;
+        const { titulo, descricao, tipo, requisito, recompensa, requerAprovacao } = req.body;
 
         // Validação dos campos obrigatórios
         if (!titulo || !descricao || !tipo || !requisito || !recompensa) {
@@ -135,7 +142,8 @@ router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
             tipo,
             requisito,
             recompensa,
-            usuariosConcluidos: []
+            usuariosConcluidos: [],
+            requerAprovacao: !!requerAprovacao
         });
 
         await novaMeta.save();
@@ -153,8 +161,8 @@ router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
     }
 });
 
-// POST /api/goal/concluir/:id - Concluir meta (usuário)
-router.post('/concluir/:id', verificarToken, async (req, res) => {
+// POST /api/goal/concluir/:id - Solicitar conclusão de meta (usuário)
+router.post('/concluir/:id', verificarToken, upload.single('evidenciaArquivo'), async (req, res) => {
     try {
         const meta = await Goal.findById(req.params.id);
 
@@ -178,14 +186,33 @@ router.post('/concluir/:id', verificarToken, async (req, res) => {
             });
         }
 
-        // Adiciona usuário à lista de concluídos
+        // Se requer aprovação, criar GoalRequest pendente
+        if (meta.requerAprovacao) {
+            // Verifica se já existe solicitação pendente para essa meta e usuário
+            const jaSolicitada = await GoalRequest.findOne({ goal: meta._id, aluno: req.user._id, status: 'pendente' });
+            if (jaSolicitada) {
+                return res.status(400).json({ message: 'Já existe uma solicitação pendente para essa meta.' });
+            }
+            let evidenciaArquivoPath = undefined;
+            if (req.file) {
+                evidenciaArquivoPath = req.file.path;
+            }
+            const goalRequest = new GoalRequest({
+                goal: meta._id,
+                aluno: req.user._id,
+                comentario: req.body.comentario,
+                evidenciaTexto: req.body.evidenciaTexto,
+                evidenciaArquivo: evidenciaArquivoPath,
+                status: 'pendente',
+            });
+            await goalRequest.save();
+            return res.status(200).json({ message: 'Solicitação enviada para análise!', goalRequest });
+        }
+
+        // Se não requer aprovação, concluir direto
         meta.usuariosConcluidos.push(req.user._id);
         await meta.save();
-
-        // Adiciona recompensa ao usuário
         await req.user.adicionarCoins(meta.recompensa);
-
-        // Cria transação de recompensa
         const Transaction = require('../models/transactionModel');
         const transacao = new Transaction({
             tipo: 'recebido',
@@ -195,26 +222,109 @@ router.post('/concluir/:id', verificarToken, async (req, res) => {
             descricao: `Recompensa por concluir meta: ${meta.titulo}`,
             hash: `goal_${meta._id}_${req.user._id}_${Date.now()}`
         });
-
         await transacao.save();
-
-        res.status(200).json({
-            message: 'Meta concluída com sucesso!',
-            recompensaAdicionada: meta.recompensa
-        });
-
+        res.status(200).json({ message: 'Meta concluída com sucesso!', recompensaAdicionada: meta.recompensa });
     } catch (error) {
         console.error('Erro ao concluir meta:', error);
-        res.status(500).json({
-            message: 'Erro interno do servidor'
-        });
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+});
+
+// GET /api/goal/solicitacoes - Listar solicitações de conclusão de meta (admin/professor)
+router.get('/solicitacoes', verificarToken, async (req, res) => {
+    try {
+        // Apenas admin ou professor pode ver todas
+        if (!["admin", "professor"].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Acesso negado' });
+        }
+        const status = req.query.status;
+        const filtro = status ? { status } : {};
+        const solicitacoes = await GoalRequest.find(filtro)
+            .populate('goal')
+            .populate('aluno', 'nome email matricula')
+            .sort({ createdAt: -1 });
+        res.json(solicitacoes);
+    } catch (error) {
+        console.error('Erro ao listar solicitações:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+});
+
+// POST /api/goal/solicitacoes/:id/aprovar - Aprovar solicitação de conclusão de meta
+router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
+    try {
+        if (!["admin", "professor"].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Acesso negado' });
+        }
+        const solicitacao = await GoalRequest.findById(req.params.id).populate('goal').populate('aluno');
+        if (!solicitacao) {
+            return res.status(404).json({ message: 'Solicitação não encontrada' });
+        }
+        if (solicitacao.status !== 'pendente') {
+            return res.status(400).json({ message: 'Solicitação já foi processada' });
+        }
+        // Marcar como aprovada
+        solicitacao.status = 'aprovada';
+        solicitacao.analisadoPor = req.user._id;
+        solicitacao.dataAnalise = new Date();
+        solicitacao.resposta = req.body.resposta;
+        await solicitacao.save();
+        // Marcar meta como concluída para o aluno
+        const meta = await Goal.findById(solicitacao.goal._id);
+        if (!meta.usuariosConcluidos.includes(solicitacao.aluno._id)) {
+            meta.usuariosConcluidos.push(solicitacao.aluno._id);
+            await meta.save();
+            // Adicionar coins ao aluno
+            const aluno = await User.findById(solicitacao.aluno._id);
+            await aluno.adicionarCoins(meta.recompensa);
+            // Criar transação
+            const Transaction = require('../models/transactionModel');
+            const transacao = new Transaction({
+                tipo: 'recebido',
+                origem: null,
+                destino: aluno._id,
+                quantidade: meta.recompensa,
+                descricao: `Recompensa por concluir meta: ${meta.titulo}`,
+                hash: `goal_${meta._id}_${aluno._id}_${Date.now()}`
+            });
+            await transacao.save();
+        }
+        res.json({ message: 'Solicitação aprovada e coins creditados!', solicitacao });
+    } catch (error) {
+        console.error('Erro ao aprovar solicitação:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+});
+
+// POST /api/goal/solicitacoes/:id/recusar - Recusar solicitação de conclusão de meta
+router.post('/solicitacoes/:id/recusar', verificarToken, async (req, res) => {
+    try {
+        if (!["admin", "professor"].includes(req.user.role)) {
+            return res.status(403).json({ message: 'Acesso negado' });
+        }
+        const solicitacao = await GoalRequest.findById(req.params.id).populate('goal').populate('aluno');
+        if (!solicitacao) {
+            return res.status(404).json({ message: 'Solicitação não encontrada' });
+        }
+        if (solicitacao.status !== 'pendente') {
+            return res.status(400).json({ message: 'Solicitação já foi processada' });
+        }
+        solicitacao.status = 'recusada';
+        solicitacao.analisadoPor = req.user._id;
+        solicitacao.dataAnalise = new Date();
+        solicitacao.resposta = req.body.resposta;
+        await solicitacao.save();
+        res.json({ message: 'Solicitação recusada.', solicitacao });
+    } catch (error) {
+        console.error('Erro ao recusar solicitação:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
     }
 });
 
 // PUT /api/goal/:id - Atualizar meta (admin)
 router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
-        const { titulo, descricao, tipo, requisito, recompensa } = req.body;
+        const { titulo, descricao, tipo, requisito, recompensa, requerAprovacao } = req.body;
         const metaId = req.params.id;
 
         const meta = await Goal.findById(metaId);
@@ -230,6 +340,7 @@ router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
         if (tipo) meta.tipo = tipo;
         if (requisito !== undefined) meta.requisito = requisito;
         if (recompensa !== undefined) meta.recompensa = recompensa;
+        if (requerAprovacao !== undefined) meta.requerAprovacao = !!requerAprovacao;
 
         await meta.save();
 

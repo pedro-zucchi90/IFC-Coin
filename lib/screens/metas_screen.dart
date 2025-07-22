@@ -206,10 +206,37 @@ class _MetasScreenState extends State<MetasScreen> {
                             );
                             if (mounted) {
                               Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Solicitação enviada para análise!'),
-                                  backgroundColor: azulPrincipal,
+                              // SweetAlert/Dialog bonito após envio
+                              await showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  title: Row(
+                                    children: const [
+                                      Icon(Icons.hourglass_top, color: Colors.orange, size: 32),
+                                      SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Solicitação enviada!',
+                                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  content: const Text(
+                                    'Sua solicitação de conclusão de meta foi enviada para análise. Aguarde a aprovação de um professor ou administrador.',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.orange,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
                                 ),
                               );
                               await _carregarMetas();
@@ -333,6 +360,7 @@ class _MetasScreenState extends State<MetasScreen> {
                             itemBuilder: (context, index) {
                               final meta = _metas[index];
                               final usuarioConcluiu = meta.usuarioConcluiu ?? false;
+                              final solicitacaoPendente = meta.temSolicitacaoPendente ?? false;
                               
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 16),
@@ -393,7 +421,30 @@ class _MetasScreenState extends State<MetasScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: 12),
-                                      if (usuarioConcluiu)
+                                      if (solicitacaoPendente)
+                                        Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.yellow.shade100,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: Colors.yellow.shade700),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.hourglass_top, color: Colors.orange),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Solicitação enviada!',
+                                                style: TextStyle(
+                                                  color: Colors.orange.shade800,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else if (usuarioConcluiu)
                                         Container(
                                           width: double.infinity,
                                           padding: const EdgeInsets.all(12),

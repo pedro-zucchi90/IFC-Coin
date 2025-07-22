@@ -70,8 +70,14 @@ router.put('/perfil', verificarToken, upload.single('fotoPerfil'), async (req, r
 
     // Se veio arquivo, atualizar foto de perfil
     if (req.file) {
+      // Redimensionar e comprimir imagem com sharp
+      const sharp = require('sharp');
+      const resizedBuffer = await sharp(req.file.buffer)
+        .resize(256, 256, { fit: 'cover' })
+        .jpeg({ quality: 80 })
+        .toBuffer();
       // Salvar binário no MongoDB
-      user.fotoPerfilBin = req.file.buffer;
+      user.fotoPerfilBin = resizedBuffer;
       // Atualizar campo fotoPerfil para endpoint
       user.fotoPerfil = `/api/user/foto/${user._id}`;
     }

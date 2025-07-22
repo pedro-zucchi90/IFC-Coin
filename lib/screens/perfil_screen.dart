@@ -54,11 +54,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     });
 
     try {
-      // Carregar conquistas do usuário (implementar quando tiver endpoint)
-      // final conquistas = await _achievementService.listarMinhasConquistas();
-      // setState(() {
-      //   _conquistas = conquistas;
-      // });
       setState(() {
         _isLoading = false;
       });

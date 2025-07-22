@@ -3,6 +3,7 @@ import '../models/goal_model.dart';
 import '../services/goal_service.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'admin_aprovar_solicitacoes_metas_screen.dart';
 
 class AdminMetasScreen extends StatefulWidget {
   const AdminMetasScreen({Key? key}) : super(key: key);
@@ -16,6 +17,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
   List<Goal> _metas = [];
   bool _isLoading = true;
   String? _error;
+  bool _requerAprovacao = false;
 
   @override
   void initState() {
@@ -50,146 +52,162 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
     final _requisitoController = TextEditingController();
     final _recompensaController = TextEditingController();
     String _tipoSelecionado = 'evento';
+    bool _requerAprovacao = false;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Criar Nova Meta'),
-        content: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _tituloController,
-                  decoration: const InputDecoration(
-                    labelText: 'Título',
-                    border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Criar Nova Meta'),
+          content: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(
+                      labelText: 'Título',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Título é obrigatório';
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Título é obrigatório';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descricaoController,
-                  decoration: const InputDecoration(
-                    labelText: 'Descrição',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descricaoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Descrição',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Descrição é obrigatória';
+                      }
+                      return null;
+                    },
                   ),
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Descrição é obrigatória';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _tipoSelecionado,
-                  decoration: const InputDecoration(
-                    labelText: 'Tipo',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _tipoSelecionado,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'evento', child: Text('Evento')),
+                      DropdownMenuItem(value: 'indicacao', child: Text('Indicação')),
+                      DropdownMenuItem(value: 'desempenho', child: Text('Desempenho')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _tipoSelecionado = value!;
+                      });
+                    },
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'evento', child: Text('Evento')),
-                    DropdownMenuItem(value: 'indicacao', child: Text('Indicação')),
-                    DropdownMenuItem(value: 'desempenho', child: Text('Desempenho')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _tipoSelecionado = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _requisitoController,
-                  decoration: const InputDecoration(
-                    labelText: 'Requisito',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _requisitoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Requisito',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Requisito é obrigatório';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Deve ser um número';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Requisito é obrigatório';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Deve ser um número';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _recompensaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Recompensa (coins)',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _recompensaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Recompensa (coins)',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Recompensa é obrigatória';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Deve ser um número';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Recompensa é obrigatória';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Deve ser um número';
-                    }
-                    return null;
-                  },
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _requerAprovacao,
+                        onChanged: (val) {
+                          setState(() { _requerAprovacao = val!; });
+                        },
+                      ),
+                      const Text('Requer aprovação?'),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                try {
-                  await _goalService.criarMeta(
-                    titulo: _tituloController.text,
-                    descricao: _descricaoController.text,
-                    tipo: _tipoSelecionado,
-                    requisito: int.parse(_requisitoController.text),
-                    recompensa: int.parse(_recompensaController.text),
-                  );
-                  
-                  Navigator.of(context).pop();
-                  _carregarMetas();
-                  
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Meta criada com sucesso!'),
-                        backgroundColor: Colors.green,
-                      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  try {
+                    await _goalService.criarMeta(
+                      titulo: _tituloController.text,
+                      descricao: _descricaoController.text,
+                      tipo: _tipoSelecionado,
+                      requisito: int.parse(_requisitoController.text),
+                      recompensa: int.parse(_recompensaController.text),
+                      requerAprovacao: _requerAprovacao,
                     );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erro ao criar meta: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    
+                    Navigator.of(context).pop();
+                    _carregarMetas();
+                    
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Meta criada com sucesso!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erro ao criar meta: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   }
                 }
-              }
-            },
-            child: const Text('Criar'),
-          ),
-        ],
+              },
+              child: const Text('Criar'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -201,147 +219,163 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
     final _requisitoController = TextEditingController(text: meta.requisito.toString());
     final _recompensaController = TextEditingController(text: meta.recompensa.toString());
     String _tipoSelecionado = meta.tipo;
+    bool _requerAprovacaoEdit = meta.requerAprovacao;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar Meta'),
-        content: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _tituloController,
-                  decoration: const InputDecoration(
-                    labelText: 'Título',
-                    border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Editar Meta'),
+          content: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(
+                      labelText: 'Título',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Título é obrigatório';
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Título é obrigatório';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descricaoController,
-                  decoration: const InputDecoration(
-                    labelText: 'Descrição',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descricaoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Descrição',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Descrição é obrigatória';
+                      }
+                      return null;
+                    },
                   ),
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Descrição é obrigatória';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _tipoSelecionado,
-                  decoration: const InputDecoration(
-                    labelText: 'Tipo',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _tipoSelecionado,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'evento', child: Text('Evento')),
+                      DropdownMenuItem(value: 'indicacao', child: Text('Indicação')),
+                      DropdownMenuItem(value: 'desempenho', child: Text('Desempenho')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _tipoSelecionado = value!;
+                      });
+                    },
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'evento', child: Text('Evento')),
-                    DropdownMenuItem(value: 'indicacao', child: Text('Indicação')),
-                    DropdownMenuItem(value: 'desempenho', child: Text('Desempenho')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _tipoSelecionado = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _requisitoController,
-                  decoration: const InputDecoration(
-                    labelText: 'Requisito',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _requisitoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Requisito',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Requisito é obrigatório';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Deve ser um número';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Requisito é obrigatório';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Deve ser um número';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _recompensaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Recompensa (coins)',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _recompensaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Recompensa (coins)',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Recompensa é obrigatória';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Deve ser um número';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Recompensa é obrigatória';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Deve ser um número';
-                    }
-                    return null;
-                  },
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _requerAprovacaoEdit,
+                        onChanged: (val) {
+                          setState(() { _requerAprovacaoEdit = val!; });
+                        },
+                      ),
+                      const Text('Requer aprovação?'),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                try {
-                  await _goalService.editarMeta(
-                    metaId: meta.id!,
-                    titulo: _tituloController.text,
-                    descricao: _descricaoController.text,
-                    tipo: _tipoSelecionado,
-                    requisito: int.parse(_requisitoController.text),
-                    recompensa: int.parse(_recompensaController.text),
-                  );
-                  
-                  Navigator.of(context).pop();
-                  _carregarMetas();
-                  
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Meta editada com sucesso!'),
-                        backgroundColor: Colors.green,
-                      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  try {
+                    await _goalService.editarMeta(
+                      metaId: meta.id!,
+                      titulo: _tituloController.text,
+                      descricao: _descricaoController.text,
+                      tipo: _tipoSelecionado,
+                      requisito: int.parse(_requisitoController.text),
+                      recompensa: int.parse(_recompensaController.text),
+                      requerAprovacao: _requerAprovacaoEdit,
                     );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erro ao editar meta: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    
+                    Navigator.of(context).pop();
+                    _carregarMetas();
+                    
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Meta editada com sucesso!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erro ao editar meta: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   }
                 }
-              }
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -416,6 +450,18 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
             onPressed: _mostrarDialogCriarMeta,
+          ),
+          IconButton(
+            icon: const Icon(Icons.assignment_turned_in, color: Colors.blue),
+            tooltip: 'Aprovar Solicitações de Metas',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminAprovarSolicitacoesMetasScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),

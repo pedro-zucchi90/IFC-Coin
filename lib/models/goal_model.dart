@@ -121,3 +121,47 @@ class Goal {
     );
   }
 } 
+
+class GoalRequest {
+  final String id;
+  final Goal goal;
+  final Map<String, dynamic> aluno;
+  final String status;
+  final String? comentario;
+  final String? evidenciaTexto;
+  final String? evidenciaArquivo;
+  final String? resposta;
+  final String? analisadoPor;
+  final DateTime? dataAnalise;
+  final DateTime createdAt;
+
+  GoalRequest({
+    required this.id,
+    required this.goal,
+    required this.aluno,
+    required this.status,
+    this.comentario,
+    this.evidenciaTexto,
+    this.evidenciaArquivo,
+    this.resposta,
+    this.analisadoPor,
+    this.dataAnalise,
+    required this.createdAt,
+  });
+
+  factory GoalRequest.fromJson(Map<String, dynamic> json) {
+    return GoalRequest(
+      id: json['_id'],
+      goal: Goal.fromJson(json['goal']),
+      aluno: json['aluno'],
+      status: json['status'],
+      comentario: json['comentario'],
+      evidenciaTexto: json['evidenciaTexto'],
+      evidenciaArquivo: json['evidenciaArquivo'],
+      resposta: json['resposta'],
+      analisadoPor: json['analisadoPor']?.toString(),
+      dataAnalise: json['dataAnalise'] != null ? DateTime.parse(json['dataAnalise']) : null,
+      createdAt: DateTime.parse(json['createdAt']),
+    );
+  }
+} 

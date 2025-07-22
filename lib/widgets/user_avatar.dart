@@ -19,12 +19,22 @@ class UserAvatar extends StatelessWidget {
     Widget avatar;
     // Se o usuário tem foto de perfil
     if (fotoPerfilUrl != null && fotoPerfilUrl.isNotEmpty) {
+      String? cacheBuster;
+      final userUpdatedAt = user?.updatedAt;
+      if (userUpdatedAt != null) {
+        cacheBuster = userUpdatedAt.millisecondsSinceEpoch.toString();
+      } else {
+        cacheBuster = DateTime.now().millisecondsSinceEpoch.toString();
+      }
       if (fotoPerfilUrl.startsWith('http')) {
         // Foto de perfil é uma URL completa
+        final url = fotoPerfilUrl.contains('?')
+            ? '${fotoPerfilUrl}&t=$cacheBuster'
+            : '${fotoPerfilUrl}?t=$cacheBuster';
         avatar = CircleAvatar(
           radius: radius,
           backgroundColor: Colors.grey.shade300,
-          backgroundImage: NetworkImage(fotoPerfilUrl),
+          backgroundImage: NetworkImage(url),
         );
       } else if (File(fotoPerfilUrl).existsSync()) {
         // Foto de perfil é um arquivo local
@@ -44,6 +54,9 @@ class UserAvatar extends StatelessWidget {
           base = base.substring(0, base.length - 4);
         }
         String fullUrl = '$base$url';
+        fullUrl = fullUrl.contains('?')
+            ? '$fullUrl&t=$cacheBuster'
+            : '$fullUrl?t=$cacheBuster';
         avatar = CircleAvatar(
           radius: radius,
           backgroundColor: Colors.grey.shade300,
