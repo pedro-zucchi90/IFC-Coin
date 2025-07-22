@@ -6,7 +6,7 @@ import '../services/notification_service.dart';
 const Color azulPrincipal = Color(0xFF1976D2);
 
 class AdminSolicitacoesProfessoresScreen extends StatefulWidget {
-  const AdminSolicitacoesProfessoresScreen({Key? key}) : super(key: key);
+  const AdminSolicitacoesProfessoresScreen({super.key});
 
   @override
   State<AdminSolicitacoesProfessoresScreen> createState() => _AdminSolicitacoesProfessoresScreenState();
@@ -22,8 +22,8 @@ class _AdminSolicitacoesProfessoresScreenState extends State<AdminSolicitacoesPr
   String _filtroStatus = 'pendente';
   int _paginaAtual = 1;
   int _totalPaginas = 1;
-  Map<String, bool> _loadingAprovacao = {};
-  Map<String, bool> _loadingRecusa = {};
+  final Map<String, bool> _loadingAprovacao = {};
+  final Map<String, bool> _loadingRecusa = {};
 
   @override
   void initState() {

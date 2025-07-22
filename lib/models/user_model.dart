@@ -31,21 +31,25 @@ class User {
   // Cria um User a partir de um JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['_id'],
-      nome: json['nome'],
-      email: json['email'],
-      matricula: json['matricula'],
-      role: json['role'],
-      curso: json['curso'],
-      turmas: List<String>.from(json['turmas'] ?? []),
-      saldo: json['saldo'] ?? 0,
-      fotoPerfil: json['fotoPerfil'],
-      statusAprovacao: json['statusAprovacao'],
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
+      id: json['_id']?.toString() ?? '',
+      nome: (json['nome'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      matricula: (json['matricula'] ?? '').toString(),
+      role: (json['role'] ?? '').toString(),
+      curso: json['curso']?.toString(),
+      turmas: json['turmas'] != null
+          ? List<String>.from((json['turmas'] as List).map((e) => e?.toString() ?? ''))
+          : <String>[],
+      saldo: json['saldo'] is int
+          ? json['saldo']
+          : int.tryParse(json['saldo']?.toString() ?? '0') ?? 0,
+      fotoPerfil: json['fotoPerfil']?.toString(),
+      statusAprovacao: json['statusAprovacao']?.toString(),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
           : null,
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())
           : null,
     );
   }
@@ -98,6 +102,8 @@ class User {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  bool get isAdminOrProfessor => role == 'admin' || role == 'professor';
 }
 
 // Classe auxiliar para requisição de login

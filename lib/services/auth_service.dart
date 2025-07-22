@@ -173,7 +173,6 @@ class AuthService {
           },
         );
       }
-    } catch (e) {
     } finally {
       // Limpa dados locais
       final prefs = await SharedPreferences.getInstance();

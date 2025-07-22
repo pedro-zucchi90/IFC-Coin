@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../particle_background.dart';
 import '../providers/auth_provider.dart';
 import 'tela_login.dart';
-import 'home.dart';
 
 class TelaProfessorCriarConta extends StatefulWidget {
   const TelaProfessorCriarConta({super.key});

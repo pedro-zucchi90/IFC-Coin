@@ -5,7 +5,7 @@ import '../widgets/user_avatar.dart';
 import 'perfil_screen.dart';
 
 class ConquistasScreen extends StatefulWidget {
-  const ConquistasScreen({Key? key}) : super(key: key);
+  const ConquistasScreen({super.key});
 
   @override
   State<ConquistasScreen> createState() => _ConquistasScreenState();

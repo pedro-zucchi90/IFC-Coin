@@ -96,6 +96,7 @@ userSchema.methods.compararSenha = async function(senhaCandidata) {
 // Método para adicionar coins ao saldo do usuário
 userSchema.methods.adicionarCoins = function(quantidade) {
     if (quantidade > 0) {
+        // Admin/professor: saldo ilimitado (não precisa checar limite)
         this.saldo += quantidade;
         return this.save();
     }
@@ -104,9 +105,16 @@ userSchema.methods.adicionarCoins = function(quantidade) {
 
 // Método para remover coins do saldo do usuário
 userSchema.methods.removerCoins = function(quantidade) {
-    if (quantidade > 0 && this.saldo >= quantidade) {
-        this.saldo -= quantidade;
-        return this.save();
+    if (quantidade > 0) {
+        // Admin/professor: saldo ilimitado (nunca ficam negativos)
+        if (this.role === 'admin' || this.role === 'professor') {
+            this.saldo = Math.max(0, this.saldo - quantidade); // só para manter coerência visual
+            return this.save();
+        }
+        if (this.saldo >= quantidade) {
+            this.saldo -= quantidade;
+            return this.save();
+        }
     }
     throw new Error('Saldo insuficiente ou quantidade inválida');
 };

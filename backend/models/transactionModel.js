@@ -7,6 +7,7 @@ const transactionSchema = new mongoose.Schema({
     quantidade: Number,
     descricao: String,
     hash: String,
+    status: { type: String, enum: ['pendente', 'aprovada', 'recusada'], default: 'aprovada' }, // Para transferências professor-aluno
 }, 
 { timestamps: true });
 

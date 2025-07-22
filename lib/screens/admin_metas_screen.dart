@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'admin_aprovar_solicitacoes_metas_screen.dart';
 
 class AdminMetasScreen extends StatefulWidget {
-  const AdminMetasScreen({Key? key}) : super(key: key);
+  const AdminMetasScreen({super.key});
 
   @override
   State<AdminMetasScreen> createState() => _AdminMetasScreenState();
@@ -17,7 +17,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
   List<Goal> _metas = [];
   bool _isLoading = true;
   String? _error;
-  bool _requerAprovacao = false;
+  final bool _requerAprovacao = false;
 
   @override
   void initState() {
@@ -46,13 +46,13 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
   }
 
   void _mostrarDialogCriarMeta() {
-    final _formKey = GlobalKey<FormState>();
-    final _tituloController = TextEditingController();
-    final _descricaoController = TextEditingController();
-    final _requisitoController = TextEditingController();
-    final _recompensaController = TextEditingController();
-    String _tipoSelecionado = 'evento';
-    bool _requerAprovacao = false;
+    final formKey = GlobalKey<FormState>();
+    final tituloController = TextEditingController();
+    final descricaoController = TextEditingController();
+    final requisitoController = TextEditingController();
+    final recompensaController = TextEditingController();
+    String tipoSelecionado = 'evento';
+    bool requerAprovacao = false;
 
     showDialog(
       context: context,
@@ -60,13 +60,13 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
         builder: (context, setState) => AlertDialog(
           title: const Text('Criar Nova Meta'),
           content: Form(
-            key: _formKey,
+            key: formKey,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
-                    controller: _tituloController,
+                    controller: tituloController,
                     decoration: const InputDecoration(
                       labelText: 'Título',
                       border: OutlineInputBorder(),
@@ -80,7 +80,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _descricaoController,
+                    controller: descricaoController,
                     decoration: const InputDecoration(
                       labelText: 'Descrição',
                       border: OutlineInputBorder(),
@@ -95,7 +95,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _tipoSelecionado,
+                    value: tipoSelecionado,
                     decoration: const InputDecoration(
                       labelText: 'Tipo',
                       border: OutlineInputBorder(),
@@ -107,13 +107,13 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                     ],
                     onChanged: (value) {
                       setState(() {
-                        _tipoSelecionado = value!;
+                        tipoSelecionado = value!;
                       });
                     },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _requisitoController,
+                    controller: requisitoController,
                     decoration: const InputDecoration(
                       labelText: 'Requisito',
                       border: OutlineInputBorder(),
@@ -131,7 +131,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _recompensaController,
+                    controller: recompensaController,
                     decoration: const InputDecoration(
                       labelText: 'Recompensa (coins)',
                       border: OutlineInputBorder(),
@@ -151,9 +151,9 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   Row(
                     children: [
                       Checkbox(
-                        value: _requerAprovacao,
+                        value: requerAprovacao,
                         onChanged: (val) {
-                          setState(() { _requerAprovacao = val!; });
+                          setState(() { requerAprovacao = val!; });
                         },
                       ),
                       const Text('Requer aprovação?'),
@@ -170,15 +170,15 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   try {
                     await _goalService.criarMeta(
-                      titulo: _tituloController.text,
-                      descricao: _descricaoController.text,
-                      tipo: _tipoSelecionado,
-                      requisito: int.parse(_requisitoController.text),
-                      recompensa: int.parse(_recompensaController.text),
-                      requerAprovacao: _requerAprovacao,
+                      titulo: tituloController.text,
+                      descricao: descricaoController.text,
+                      tipo: tipoSelecionado,
+                      requisito: int.parse(requisitoController.text),
+                      recompensa: int.parse(recompensaController.text),
+                      requerAprovacao: requerAprovacao,
                     );
                     
                     Navigator.of(context).pop();
@@ -213,13 +213,13 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
   }
 
   void _mostrarDialogEditarMeta(Goal meta) {
-    final _formKey = GlobalKey<FormState>();
-    final _tituloController = TextEditingController(text: meta.titulo);
-    final _descricaoController = TextEditingController(text: meta.descricao);
-    final _requisitoController = TextEditingController(text: meta.requisito.toString());
-    final _recompensaController = TextEditingController(text: meta.recompensa.toString());
-    String _tipoSelecionado = meta.tipo;
-    bool _requerAprovacaoEdit = meta.requerAprovacao;
+    final formKey = GlobalKey<FormState>();
+    final tituloController = TextEditingController(text: meta.titulo);
+    final descricaoController = TextEditingController(text: meta.descricao);
+    final requisitoController = TextEditingController(text: meta.requisito.toString());
+    final recompensaController = TextEditingController(text: meta.recompensa.toString());
+    String tipoSelecionado = meta.tipo;
+    bool requerAprovacaoEdit = meta.requerAprovacao;
 
     showDialog(
       context: context,
@@ -227,13 +227,13 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
         builder: (context, setState) => AlertDialog(
           title: const Text('Editar Meta'),
           content: Form(
-            key: _formKey,
+            key: formKey,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
-                    controller: _tituloController,
+                    controller: tituloController,
                     decoration: const InputDecoration(
                       labelText: 'Título',
                       border: OutlineInputBorder(),
@@ -247,7 +247,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _descricaoController,
+                    controller: descricaoController,
                     decoration: const InputDecoration(
                       labelText: 'Descrição',
                       border: OutlineInputBorder(),
@@ -262,7 +262,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _tipoSelecionado,
+                    value: tipoSelecionado,
                     decoration: const InputDecoration(
                       labelText: 'Tipo',
                       border: OutlineInputBorder(),
@@ -274,13 +274,13 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                     ],
                     onChanged: (value) {
                       setState(() {
-                        _tipoSelecionado = value!;
+                        tipoSelecionado = value!;
                       });
                     },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _requisitoController,
+                    controller: requisitoController,
                     decoration: const InputDecoration(
                       labelText: 'Requisito',
                       border: OutlineInputBorder(),
@@ -298,7 +298,7 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _recompensaController,
+                    controller: recompensaController,
                     decoration: const InputDecoration(
                       labelText: 'Recompensa (coins)',
                       border: OutlineInputBorder(),
@@ -318,9 +318,9 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   Row(
                     children: [
                       Checkbox(
-                        value: _requerAprovacaoEdit,
+                        value: requerAprovacaoEdit,
                         onChanged: (val) {
-                          setState(() { _requerAprovacaoEdit = val!; });
+                          setState(() { requerAprovacaoEdit = val!; });
                         },
                       ),
                       const Text('Requer aprovação?'),
@@ -337,16 +337,16 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   try {
                     await _goalService.editarMeta(
                       metaId: meta.id!,
-                      titulo: _tituloController.text,
-                      descricao: _descricaoController.text,
-                      tipo: _tipoSelecionado,
-                      requisito: int.parse(_requisitoController.text),
-                      recompensa: int.parse(_recompensaController.text),
-                      requerAprovacao: _requerAprovacaoEdit,
+                      titulo: tituloController.text,
+                      descricao: descricaoController.text,
+                      tipo: tipoSelecionado,
+                      requisito: int.parse(requisitoController.text),
+                      recompensa: int.parse(recompensaController.text),
+                      requerAprovacao: requerAprovacaoEdit,
                     );
                     
                     Navigator.of(context).pop();

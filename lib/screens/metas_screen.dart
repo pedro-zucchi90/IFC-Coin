@@ -12,7 +12,7 @@ import 'perfil_screen.dart';
 const Color azulPrincipal = Color(0xFF1976D2);
 
 class MetasScreen extends StatefulWidget {
-  const MetasScreen({Key? key}) : super(key: key);
+  const MetasScreen({super.key});
 
   @override
   State<MetasScreen> createState() => _MetasScreenState();

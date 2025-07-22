@@ -3,7 +3,7 @@ import '../services/goal_service.dart';
 import '../models/goal_model.dart';
 
 class AdminAprovarSolicitacoesMetasScreen extends StatefulWidget {
-  const AdminAprovarSolicitacoesMetasScreen({Key? key}) : super(key: key);
+  const AdminAprovarSolicitacoesMetasScreen({super.key});
 
   @override
   State<AdminAprovarSolicitacoesMetasScreen> createState() => _AdminAprovarSolicitacoesMetasScreenState();

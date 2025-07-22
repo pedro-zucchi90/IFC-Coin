@@ -11,9 +11,16 @@ import 'admin_conquistas_screen.dart';
 import 'admin_solicitacoes_professores_screen.dart';
 import 'perfil_screen.dart';
 import '../widgets/user_avatar.dart';
+import 'historico_transacoes_screen.dart';
+import '../models/transaction_model.dart';
+import '../services/transaction_service.dart';
+import 'transferencia_screen.dart';
+import 'admin_aprovar_transferencias_screen.dart';
+import 'qr_code_receber_screen.dart';
+import 'qr_code_ler_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +50,48 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code, color: Colors.black, size: 40),
-            onPressed: () {},
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (context) => Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.qr_code, color: Colors.blue),
+                        title: Text('Gerar QR Code para receber'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QrCodeReceberScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.camera_alt, color: Colors.green),
+                        title: Text('Ler QR Code para transferir'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QrCodeLerScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
@@ -152,7 +200,14 @@ class HomeScreen extends StatelessWidget {
                     iconColor: Color(0xFFE53935),
                     title: 'Histórico de Transações',
                     textColor: Color(0xFFE53935),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HistoricoTransacoesScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _HomeCard(
                     icon: Icons.attach_money,
@@ -203,6 +258,20 @@ class HomeScreen extends StatelessWidget {
                 // Adicionar botões específicos para admin
                 if (isAdmin) {
                   cards.addAll([
+                    _HomeCard(
+                      icon: Icons.verified_user,
+                      iconColor: Color(0xFF1976D2),
+                      title: 'Aprovar Transferências',
+                      textColor: Color(0xFF1976D2),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdminAprovarTransferenciasScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     _HomeCard(
                       icon: Icons.person_add,
                       iconColor: Color(0xFFFF9800),
@@ -271,8 +340,8 @@ class _HomeCard extends StatelessWidget {
     required this.title,
     required this.textColor,
     required this.onTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

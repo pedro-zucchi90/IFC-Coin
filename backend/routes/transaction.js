@@ -73,12 +73,25 @@ router.post('/transferir', verificarToken, async (req, res) => {
             });
         }
 
-        // Verificar se tem saldo suficiente
-        if (req.user.saldo < quantidade) {
+        // Admin/professor têm saldo ilimitado
+        const isAdminOrProfessor = req.user.role === 'admin' || req.user.role === 'professor';
+        if (!isAdminOrProfessor && req.user.saldo < quantidade) {
             return res.status(400).json({
                 message: 'Saldo insuficiente para transferência'
             });
         }
+
+        // Se professor transferindo para aluno, criar transação pendente
+        let status = 'aprovada';
+        if (req.user.role === 'professor' && usuarioDestino.role === 'aluno') {
+            status = 'pendente';
+        }
+
+        // Criar hash seguro
+        const crypto = require('crypto');
+        const hash = crypto.createHash('sha256')
+            .update(`${Date.now()}_${req.user._id}_${usuarioDestino._id}_${Math.random()}`)
+            .digest('hex');
 
         // Criar transação
         const transacao = new Transaction({
@@ -87,22 +100,28 @@ router.post('/transferir', verificarToken, async (req, res) => {
             destino: usuarioDestino._id,
             quantidade,
             descricao: descricao || 'Transferência entre usuários',
-            hash: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            hash,
+            status
         });
 
         await transacao.save();
 
-        // Atualizar saldos
-        await req.user.removerCoins(quantidade);
-        await usuarioDestino.adicionarCoins(quantidade);
+        // Buscar instâncias reais do Mongoose
+        const origem = await User.findById(req.user._id);
+        const destino = await User.findById(usuarioDestino._id);
 
+        if (status === 'aprovada') {
+            // Atualizar saldos imediatamente
+            await origem.removerCoins(quantidade);
+            await destino.adicionarCoins(quantidade);
+        }
         // Buscar transação com dados populados
         const transacaoCompleta = await Transaction.findById(transacao._id)
-            .populate('origem', 'nome matricula')
-            .populate('destino', 'nome matricula');
+            .populate('origem', 'nome matricula role')
+            .populate('destino', 'nome matricula role');
 
         res.status(201).json({
-            message: 'Transferência realizada com sucesso',
+            message: status === 'pendente' ? 'Transferência pendente de aprovação do admin' : 'Transferência realizada com sucesso',
             transacao: transacaoCompleta
         });
 
@@ -202,6 +221,51 @@ router.get('/todas', verificarAdmin, async (req, res) => {
         res.status(500).json({
             message: 'Erro interno do servidor'
         });
+    }
+});
+
+// POST /api/transaction/:id/aprovar - Aprovar transferência pendente (admin)
+router.post('/:id/aprovar', verificarAdmin, async (req, res) => {
+    try {
+        const transacao = await Transaction.findById(req.params.id);
+        if (!transacao) {
+            return res.status(404).json({ message: 'Transação não encontrada' });
+        }
+        if (transacao.status !== 'pendente') {
+            return res.status(400).json({ message: 'Transação já foi processada' });
+        }
+        // Atualizar status
+        transacao.status = 'aprovada';
+        await transacao.save();
+        // Transferir saldo
+        const User = require('../models/userModel');
+        const origem = await User.findById(transacao.origem);
+        const destino = await User.findById(transacao.destino);
+        await origem.removerCoins(transacao.quantidade);
+        await destino.adicionarCoins(transacao.quantidade);
+        res.json({ message: 'Transferência aprovada e saldo transferido!' });
+    } catch (error) {
+        console.error('Erro ao aprovar transferência:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+});
+
+// POST /api/transaction/:id/recusar - Recusar transferência pendente (admin)
+router.post('/:id/recusar', verificarAdmin, async (req, res) => {
+    try {
+        const transacao = await Transaction.findById(req.params.id);
+        if (!transacao) {
+            return res.status(404).json({ message: 'Transação não encontrada' });
+        }
+        if (transacao.status !== 'pendente') {
+            return res.status(400).json({ message: 'Transação já foi processada' });
+        }
+        transacao.status = 'recusada';
+        await transacao.save();
+        res.json({ message: 'Transferência recusada.' });
+    } catch (error) {
+        console.error('Erro ao recusar transferência:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
     }
 });
 

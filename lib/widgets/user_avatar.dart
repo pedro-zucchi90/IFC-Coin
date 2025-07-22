@@ -9,7 +9,7 @@ class UserAvatar extends StatelessWidget {
   final double radius; // Tamanho do avatar
   final VoidCallback? onTap; // Callback ao clicar no avatar
 
-  const UserAvatar({Key? key, this.radius = 20, this.onTap}) : super(key: key);
+  const UserAvatar({super.key, this.radius = 20, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +29,8 @@ class UserAvatar extends StatelessWidget {
       if (fotoPerfilUrl.startsWith('http')) {
         // Foto de perfil é uma URL completa
         final url = fotoPerfilUrl.contains('?')
-            ? '${fotoPerfilUrl}&t=$cacheBuster'
-            : '${fotoPerfilUrl}?t=$cacheBuster';
+            ? '$fotoPerfilUrl&t=$cacheBuster'
+            : '$fotoPerfilUrl?t=$cacheBuster';
         avatar = CircleAvatar(
           radius: radius,
           backgroundColor: Colors.grey.shade300,

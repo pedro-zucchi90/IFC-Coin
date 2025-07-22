@@ -3,7 +3,7 @@ import '../widgets/user_avatar.dart';
 import 'perfil_screen.dart';
 
 class ComoGanharScreen extends StatelessWidget {
-  const ComoGanharScreen({Key? key}) : super(key: key);
+  const ComoGanharScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -138,8 +138,8 @@ class _InfoCard extends StatelessWidget {
     required this.description,
     required this.padding,
     required this.margin,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

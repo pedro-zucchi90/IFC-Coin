@@ -3,7 +3,7 @@ import '../widgets/user_avatar.dart';
 import 'perfil_screen.dart';
 
 class FAQScreen extends StatefulWidget {
-  const FAQScreen({Key? key}) : super(key: key);
+  const FAQScreen({super.key});
 
   @override
   State<FAQScreen> createState() => _FAQScreenState();
@@ -160,7 +160,7 @@ class _FAQScreenState extends State<FAQScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -172,5 +172,5 @@ class _FAQItem {
   final String question;
   final String answer;
   bool isOpen;
-  _FAQItem({required this.question, required this.answer, this.isOpen = false});
+  _FAQItem({required this.question, required this.answer}) : isOpen = false;
 }

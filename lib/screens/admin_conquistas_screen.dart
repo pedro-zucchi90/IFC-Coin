@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
 class AdminConquistasScreen extends StatefulWidget {
-  const AdminConquistasScreen({Key? key}) : super(key: key);
+  const AdminConquistasScreen({super.key});
 
   @override
   State<AdminConquistasScreen> createState() => _AdminConquistasScreenState();
@@ -44,26 +44,26 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
   }
 
   void _mostrarDialogCriarConquista() {
-    final _formKey = GlobalKey<FormState>();
-    final _nomeController = TextEditingController();
-    final _descricaoController = TextEditingController();
-    final _categoriaController = TextEditingController();
-    final _iconeController = TextEditingController();
-    final _requisitosController = TextEditingController();
-    String _tipoSelecionado = 'medalha';
+    final formKey = GlobalKey<FormState>();
+    final nomeController = TextEditingController();
+    final descricaoController = TextEditingController();
+    final categoriaController = TextEditingController();
+    final iconeController = TextEditingController();
+    final requisitosController = TextEditingController();
+    String tipoSelecionado = 'medalha';
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Criar Nova Conquista'),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  controller: _nomeController,
+                  controller: nomeController,
                   decoration: const InputDecoration(
                     labelText: 'Nome',
                     border: OutlineInputBorder(),
@@ -77,7 +77,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _descricaoController,
+                  controller: descricaoController,
                   decoration: const InputDecoration(
                     labelText: 'Descrição',
                     border: OutlineInputBorder(),
@@ -92,7 +92,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _tipoSelecionado,
+                  value: tipoSelecionado,
                   decoration: const InputDecoration(
                     labelText: 'Tipo',
                     border: OutlineInputBorder(),
@@ -104,13 +104,13 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                   ],
                   onChanged: (value) {
                     setState(() {
-                      _tipoSelecionado = value!;
+                      tipoSelecionado = value!;
                     });
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _categoriaController,
+                  controller: categoriaController,
                   decoration: const InputDecoration(
                     labelText: 'Categoria (opcional)',
                     border: OutlineInputBorder(),
@@ -118,7 +118,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _iconeController,
+                  controller: iconeController,
                   decoration: const InputDecoration(
                     labelText: 'Ícone (emoji, opcional)',
                     border: OutlineInputBorder(),
@@ -126,7 +126,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _requisitosController,
+                  controller: requisitosController,
                   decoration: const InputDecoration(
                     labelText: 'Requisitos (opcional)',
                     border: OutlineInputBorder(),
@@ -144,15 +144,15 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_formKey.currentState!.validate()) {
+              if (formKey.currentState!.validate()) {
                 try {
                   await _achievementService.criarConquista(
-                    nome: _nomeController.text,
-                    descricao: _descricaoController.text,
-                    tipo: _tipoSelecionado,
-                    categoria: _categoriaController.text.isNotEmpty ? _categoriaController.text : null,
-                    icone: _iconeController.text.isNotEmpty ? _iconeController.text : null,
-                    requisitos: _requisitosController.text.isNotEmpty ? _requisitosController.text : null,
+                    nome: nomeController.text,
+                    descricao: descricaoController.text,
+                    tipo: tipoSelecionado,
+                    categoria: categoriaController.text.isNotEmpty ? categoriaController.text : null,
+                    icone: iconeController.text.isNotEmpty ? iconeController.text : null,
+                    requisitos: requisitosController.text.isNotEmpty ? requisitosController.text : null,
                   );
                   
                   Navigator.of(context).pop();
@@ -186,26 +186,26 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
   }
 
   void _mostrarDialogEditarConquista(Achievement conquista) {
-    final _formKey = GlobalKey<FormState>();
-    final _nomeController = TextEditingController(text: conquista.nome);
-    final _descricaoController = TextEditingController(text: conquista.descricao);
-    final _categoriaController = TextEditingController(text: conquista.categoria ?? '');
-    final _iconeController = TextEditingController(text: conquista.icone ?? '');
-    final _requisitosController = TextEditingController(text: conquista.requisitos ?? '');
-    String _tipoSelecionado = conquista.tipo;
+    final formKey = GlobalKey<FormState>();
+    final nomeController = TextEditingController(text: conquista.nome);
+    final descricaoController = TextEditingController(text: conquista.descricao);
+    final categoriaController = TextEditingController(text: conquista.categoria ?? '');
+    final iconeController = TextEditingController(text: conquista.icone ?? '');
+    final requisitosController = TextEditingController(text: conquista.requisitos ?? '');
+    String tipoSelecionado = conquista.tipo;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Editar Conquista'),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  controller: _nomeController,
+                  controller: nomeController,
                   decoration: const InputDecoration(
                     labelText: 'Nome',
                     border: OutlineInputBorder(),
@@ -219,7 +219,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _descricaoController,
+                  controller: descricaoController,
                   decoration: const InputDecoration(
                     labelText: 'Descrição',
                     border: OutlineInputBorder(),
@@ -234,7 +234,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _tipoSelecionado,
+                  value: tipoSelecionado,
                   decoration: const InputDecoration(
                     labelText: 'Tipo',
                     border: OutlineInputBorder(),
@@ -246,13 +246,13 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                   ],
                   onChanged: (value) {
                     setState(() {
-                      _tipoSelecionado = value!;
+                      tipoSelecionado = value!;
                     });
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _categoriaController,
+                  controller: categoriaController,
                   decoration: const InputDecoration(
                     labelText: 'Categoria (opcional)',
                     border: OutlineInputBorder(),
@@ -260,7 +260,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _iconeController,
+                  controller: iconeController,
                   decoration: const InputDecoration(
                     labelText: 'Ícone (emoji, opcional)',
                     border: OutlineInputBorder(),
@@ -268,7 +268,7 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _requisitosController,
+                  controller: requisitosController,
                   decoration: const InputDecoration(
                     labelText: 'Requisitos (opcional)',
                     border: OutlineInputBorder(),
@@ -286,16 +286,16 @@ class _AdminConquistasScreenState extends State<AdminConquistasScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_formKey.currentState!.validate()) {
+              if (formKey.currentState!.validate()) {
                 try {
                   await _achievementService.editarConquista(
                     conquistaId: conquista.id!,
-                    nome: _nomeController.text,
-                    descricao: _descricaoController.text,
-                    tipo: _tipoSelecionado,
-                    categoria: _categoriaController.text.isNotEmpty ? _categoriaController.text : null,
-                    icone: _iconeController.text.isNotEmpty ? _iconeController.text : null,
-                    requisitos: _requisitosController.text.isNotEmpty ? _requisitosController.text : null,
+                    nome: nomeController.text,
+                    descricao: descricaoController.text,
+                    tipo: tipoSelecionado,
+                    categoria: categoriaController.text.isNotEmpty ? categoriaController.text : null,
+                    icone: iconeController.text.isNotEmpty ? iconeController.text : null,
+                    requisitos: requisitosController.text.isNotEmpty ? requisitosController.text : null,
                   );
                   
                   Navigator.of(context).pop();

@@ -8,9 +8,10 @@ import '../models/achievement_model.dart';
 import '../services/achievement_service.dart';
 import '../services/user_service.dart';
 import '../config.dart';
+import 'historico_transacoes_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
-  const PerfilScreen({Key? key}) : super(key: key);
+  const PerfilScreen({super.key});
 
   @override
   State<PerfilScreen> createState() => _PerfilScreenState();
@@ -20,7 +21,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   final AchievementService _achievementService = AchievementService();
   final UserService _userService = UserService();
   final ImagePicker _picker = ImagePicker();
-  List<Achievement> _conquistas = [];
+  final List<Achievement> _conquistas = [];
   bool _isLoading = true;
   String? _error;
   bool _isEditing = false;
@@ -603,6 +604,26 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                   );
                                 },
                               ),
+                
+                // Botão para histórico de transações
+                Center(
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.receipt_long),
+                    label: Text('Ver Histórico de Transações'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HistoricoTransacoesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           );
