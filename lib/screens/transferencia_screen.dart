@@ -3,6 +3,8 @@ import '../services/transaction_service.dart';
 import '../models/transaction_model.dart';
 import 'package:uuid/uuid.dart';
 import 'home.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class TransferenciaScreen extends StatefulWidget {
   final String? matriculaInicial;
@@ -81,6 +83,15 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
         _transacaoRealizada = transacao;
         _isLoading = false;
       });
+      
+      // Atualizar dados do usuário após transação bem-sucedida
+      try {
+        await context.read<AuthProvider>().instantUpdateAfterTransaction();
+      } catch (e) {
+        // Ignorar erro de atualização, não afeta a transação
+        print('Erro ao atualizar dados do usuário: $e');
+      }
+      
       if (mounted) {
         await showDialog(
           context: context,

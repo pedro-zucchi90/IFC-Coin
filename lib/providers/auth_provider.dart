@@ -152,6 +152,57 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Forçar atualização dos dados do usuário (para uso após transações)
+  Future<void> forceUpdateUserData() async {
+    if (!isLoggedIn) return;
+    
+    _setLoading(true);
+    try {
+      _user = await _authService.updateUserData();
+      _error = null;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Atualizar dados do usuário silenciosamente (sem mostrar loading)
+  Future<void> silentUpdateUserData() async {
+    if (!isLoggedIn) return;
+    
+    try {
+      _user = await _authService.updateUserData();
+      notifyListeners();
+    } catch (e) {
+      // Não mostrar erro para atualizações silenciosas
+      print('Erro na atualização silenciosa: $e');
+    }
+  }
+
+  // Atualização instantânea após transações (com feedback visual)
+  Future<void> instantUpdateAfterTransaction() async {
+    if (!isLoggedIn) return;
+    
+    try {
+      final oldBalance = _user?.saldo ?? 0;
+      _user = await _authService.updateUserData();
+      final newBalance = _user?.saldo ?? 0;
+      
+      notifyListeners();
+      
+      // Se o saldo mudou, mostrar feedback visual
+      if (newBalance != oldBalance) {
+        // O feedback visual será tratado na UI
+        print('Saldo atualizado: $oldBalance -> $newBalance');
+      }
+    } catch (e) {
+      print('Erro na atualização instantânea: $e');
+    }
+  }
+
   // Limpar erro
   void clearError() {
     _error = null;

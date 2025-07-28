@@ -44,14 +44,38 @@ class AuthWrapper extends StatefulWidget {
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-class _AuthWrapperState extends State<AuthWrapper> {
+class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    // Adicionar observer para detectar mudanças no estado do app
+    WidgetsBinding.instance.addObserver(this);
+    
     // Inicializa o AuthProvider ao abrir o app
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthProvider>().initialize();
     });
+  }
+
+  @override
+  void dispose() {
+    // Remover observer
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Quando o app volta ao foco (resumed), atualizar dados do usuário
+    if (state == AppLifecycleState.resumed) {
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.isLoggedIn) {
+        // Atualizar dados silenciosamente quando o app volta ao foco
+        authProvider.silentUpdateUserData();
+      }
+    }
   }
 
   @override

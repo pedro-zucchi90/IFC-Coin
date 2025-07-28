@@ -82,7 +82,7 @@ class _MetasScreenState extends State<MetasScreen> {
           ),
         );
       }
-      await context.read<AuthProvider>().updateUserData();
+      await context.read<AuthProvider>().instantUpdateAfterTransaction();
       await _carregarMetas();
     } catch (e) {
       if (mounted) {

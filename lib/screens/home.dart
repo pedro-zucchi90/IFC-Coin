@@ -18,9 +18,129 @@ import 'transferencia_screen.dart';
 import 'admin_aprovar_transferencias_screen.dart';
 import 'qr_code_receber_screen.dart';
 import 'qr_code_ler_screen.dart';
+import 'dart:async';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  bool _isRefreshing = false;
+  Timer? _autoRefreshTimer;
+  int _lastKnownBalance = 0;
+  bool _showBalanceUpdate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    // Atualizar dados automaticamente a cada 30 segundos
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted && context.read<AuthProvider>().isLoggedIn) {
+        _silentRefresh();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Atualizar dados quando a tela volta ao foco
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _silentRefresh();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Quando o app volta ao foco, atualizar dados silenciosamente
+    if (state == AppLifecycleState.resumed) {
+      _silentRefresh();
+    }
+  }
+
+  Future<void> _silentRefresh() async {
+    try {
+      final currentBalance = context.read<AuthProvider>().user?.saldo ?? 0;
+      await context.read<AuthProvider>().silentUpdateUserData();
+      
+      // Verificar se o saldo mudou
+      final newBalance = context.read<AuthProvider>().user?.saldo ?? 0;
+      if (newBalance != _lastKnownBalance && _lastKnownBalance > 0) {
+        setState(() {
+          _showBalanceUpdate = true;
+        });
+        
+        // Esconder a animação após 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() {
+              _showBalanceUpdate = false;
+            });
+          }
+        });
+      }
+      
+      _lastKnownBalance = newBalance;
+    } catch (e) {
+      // Ignorar erros em atualizações silenciosas
+      print('Erro na atualização silenciosa: $e');
+    }
+  }
+
+  Future<void> _refreshUserData() async {
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      await context.read<AuthProvider>().updateUserData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Saldo atualizado!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao atualizar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +168,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         actions: [
+          // Botão de QR Code
           IconButton(
             icon: const Icon(Icons.qr_code, color: Colors.black, size: 40),
             onPressed: () {
@@ -136,191 +257,208 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF42A5DA),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+      body: RefreshIndicator(
+        onRefresh: _refreshUserData,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF42A5DA),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Seu saldo atual:',
+                      style: TextStyle(fontSize: 20, color: Color.fromARGB(221, 243, 243, 243)),
+                    ),
+                    const SizedBox(height: 6),
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, child) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          decoration: BoxDecoration(
+                            color: _showBalanceUpdate ? Colors.green.withOpacity(0.2) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          child: Text(
+                            '${authProvider.user?.saldo ?? 0} IFC Coin',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                              color: Color.fromARGB(255, 253, 254, 255),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.only(bottom: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Seu saldo atual:',
-                    style: TextStyle(fontSize: 20, color: Color.fromARGB(221, 243, 243, 243)),
-                  ),
-                  const SizedBox(height: 6),
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, child) {
-                      return Text(
-                        '${authProvider.user?.saldo ?? 0} IFC Coin',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                          color: Color.fromARGB(255, 253, 254, 255),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+
+              
+              Container(
+                height: 100,
+                margin: const EdgeInsets.only(bottom: 40),
+                child: Image.asset(
+                  'assets/ifc_coin_logo.png',
+                  fit: BoxFit.fill,
+                ),
               ),
-            ),
 
-            
-            Container(
-              height: 100,
-              margin: const EdgeInsets.only(bottom: 40),
-              child: Image.asset(
-                'assets/ifc_coin_logo.png',
-                fit: BoxFit.fill,
-              ),
-            ),
-
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                final isAdmin = authProvider.isAdmin;
-                final isProfessor = authProvider.isProfessor;
-                
-                List<Widget> cards = [
-                  _HomeCard(
-                    icon: Icons.receipt_long,
-                    iconColor: Color(0xFFE53935),
-                    title: 'Histórico de Transações',
-                    textColor: Color(0xFFE53935),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HistoricoTransacoesScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _HomeCard(
-                    icon: Icons.attach_money,
-                    iconColor: Color(0xFF388E3C),
-                    title: 'Como Ganhar Coins',
-                    textColor: Color(0xFF388E3C),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ComoGanharScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _HomeCard(
-                    icon: Icons.check_circle_outline,
-                    iconColor: Color(0xFF1976D2),
-                    title: isAdmin ? 'Gerenciar Metas' : 'Metas',
-                    textColor: Color(0xFF1976D2),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => isAdmin 
-                              ? const AdminMetasScreen()
-                              : const MetasScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _HomeCard(
-                    icon: Icons.help_outline,
-                    iconColor: Color(0xFF9C27B0),
-                    title: 'FAQ',
-                    textColor: Color(0xFF9C27B0),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FAQScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ];
-
-                // Adicionar botões específicos para admin
-                if (isAdmin) {
-                  cards.addAll([
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  final isAdmin = authProvider.isAdmin;
+                  final isProfessor = authProvider.isProfessor;
+                  
+                  List<Widget> cards = [
                     _HomeCard(
-                      icon: Icons.verified_user,
+                      icon: Icons.receipt_long,
+                      iconColor: Color(0xFFE53935),
+                      title: 'Histórico de Transações',
+                      textColor: Color(0xFFE53935),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HistoricoTransacoesScreen(),
+                          ),
+                        );
+                        // Atualizar dados após voltar da tela de histórico
+                        await _refreshUserData();
+                      },
+                    ),
+                    _HomeCard(
+                      icon: Icons.attach_money,
+                      iconColor: Color(0xFF388E3C),
+                      title: 'Como Ganhar Coins',
+                      textColor: Color(0xFF388E3C),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ComoGanharScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _HomeCard(
+                      icon: Icons.check_circle_outline,
                       iconColor: Color(0xFF1976D2),
-                      title: 'Aprovar Transferências',
+                      title: isAdmin ? 'Gerenciar Metas' : 'Metas',
                       textColor: Color(0xFF1976D2),
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AdminAprovarTransferenciasScreen(),
+                            builder: (context) => isAdmin 
+                                ? const AdminMetasScreen()
+                                : const MetasScreen(),
                           ),
                         );
+                        // Atualizar dados após voltar das metas
+                        await _refreshUserData();
                       },
                     ),
                     _HomeCard(
-                      icon: Icons.person_add,
-                      iconColor: Color(0xFFFF9800),
-                      title: 'Solicitações de\nProfessores',
-                      textColor: Color(0xFFFF9800),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AdminSolicitacoesProfessoresScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _HomeCard(
-                      icon: Icons.emoji_events,
+                      icon: Icons.help_outline,
                       iconColor: Color(0xFF9C27B0),
-                      title: 'Gerenciar\nConquistas',
+                      title: 'FAQ',
                       textColor: Color(0xFF9C27B0),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AdminConquistasScreen(),
+                            builder: (context) => const FAQScreen(),
                           ),
                         );
                       },
                     ),
-                  ]);
-                }
-                
-                return GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 14,
-                  crossAxisSpacing: 14,
-                  childAspectRatio: 1.2,
-                  children: cards,
-                );
-              },
-            ),
-            const SizedBox(height: 55),
-            const Text(
-              'IFC Coin: Sua moeda digital\npor horas de dedicação na instituição.',
-              style: TextStyle(fontSize: 20, color: Colors.black54),
-              textAlign: TextAlign.center,
-            ),
-          ],
+                  ];
+
+                  // Adicionar botões específicos para admin
+                  if (isAdmin) {
+                    cards.addAll([
+                      _HomeCard(
+                        icon: Icons.verified_user,
+                        iconColor: Color(0xFF1976D2),
+                        title: 'Aprovar Transferências',
+                        textColor: Color(0xFF1976D2),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminAprovarTransferenciasScreen(),
+                            ),
+                          );
+                          // Atualizar dados após aprovar transferências
+                          await _refreshUserData();
+                        },
+                      ),
+                      _HomeCard(
+                        icon: Icons.person_add,
+                        iconColor: Color(0xFFFF9800),
+                        title: 'Solicitações de\nProfessores',
+                        textColor: Color(0xFFFF9800),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminSolicitacoesProfessoresScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _HomeCard(
+                        icon: Icons.emoji_events,
+                        iconColor: Color(0xFF9C27B0),
+                        title: 'Gerenciar\nConquistas',
+                        textColor: Color(0xFF9C27B0),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminConquistasScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ]);
+                  }
+                  
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                    childAspectRatio: 1.2,
+                    children: cards,
+                  );
+                },
+              ),
+              const SizedBox(height: 55),
+              const Text(
+                'IFC Coin: Sua moeda digital\npor horas de dedicação na instituição.',
+                style: TextStyle(fontSize: 20, color: Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
