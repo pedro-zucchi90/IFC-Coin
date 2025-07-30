@@ -69,7 +69,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     
     // Quando o app volta ao foco (resumed), atualizar dados do usuário
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && mounted) {
       final authProvider = context.read<AuthProvider>();
       if (authProvider.isLoggedIn) {
         // Atualizar dados silenciosamente quando o app volta ao foco

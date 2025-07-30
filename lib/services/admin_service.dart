@@ -39,10 +39,16 @@ class AdminService {
           'solicitacoes': solicitacoes,
           'paginacao': data['paginacao'],
         };
+      } else if (response.statusCode == 401) {
+        throw Exception('Sessão expirada. Faça login novamente.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Acesso negado. Você não tem permissão para acessar esta funcionalidade.');
       } else {
-        throw Exception('Erro ao carregar solicitações');
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Erro ao carregar solicitações');
       }
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Erro de conexão: $e');
     }
   }
@@ -127,10 +133,16 @@ class AdminService {
           'recusados': data['recusados'],
           'total': data['total'],
         };
+      } else if (response.statusCode == 401) {
+        throw Exception('Sessão expirada. Faça login novamente.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Acesso negado. Você não tem permissão para acessar esta funcionalidade.');
       } else {
-        throw Exception('Erro ao carregar estatísticas');
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Erro ao carregar estatísticas');
       }
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Erro de conexão: $e');
     }
   }

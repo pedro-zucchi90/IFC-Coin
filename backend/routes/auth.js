@@ -54,14 +54,23 @@ router.post('/login', async (req, res) => {
                     message: 'Sua solicitação de cadastro foi recusada. Entre em contato com o administrador.'
                 });
             } else if (user.statusAprovacao === 'aprovado') {
+                // Verificar se é a primeira vez que o usuário faz login após ser aprovado
+                // A notificação deve aparecer apenas se o usuário nunca fez login OU se o último login foi antes da aprovação
+                const showApprovalNotification = !user.ultimoLogin || 
+                    (user.ultimoLogin < user.updatedAt && user.updatedAt > user.createdAt);
+                
+                // Atualizar último login
+                await user.atualizarUltimoLogin();
+                
                 // Gerar token JWT
                 const token = gerarToken(user._id, user.role);
-                // Adicionar flag para mostrar notificação de aprovação
+                
+                // Adicionar flag para mostrar notificação de aprovação apenas na primeira vez
                 return res.json({
                     message: 'Login realizado com sucesso',
                     token,
                     user: user.toPublicJSON(),
-                    showApprovalNotification: true // Nova flag
+                    showApprovalNotification: showApprovalNotification
                 });
             }
         }
@@ -270,6 +279,21 @@ router.get('/me', verificarToken, async (req, res) => {
         res.json(req.user); // req.user já é toPublicJSON pelo middleware
     } catch (error) {
         console.error('Erro ao obter dados do usuário:', error);
+        res.status(500).json({
+            message: 'Erro interno do servidor'
+        });
+    }
+});
+
+// GET /api/auth/verify - Verificar se o token é válido
+router.get('/verify', verificarToken, async (req, res) => {
+    try {
+        res.json({
+            message: 'Token válido',
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Erro ao verificar token:', error);
         res.status(500).json({
             message: 'Erro interno do servidor'
         });

@@ -99,13 +99,21 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
           builder: (context) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
-              children: const [
-                Icon(Icons.check_circle, color: Colors.blue, size: 32),
-                SizedBox(width: 12),
+              children: [
+                Icon(
+                  transacao.status == 'pendente' ? Icons.pending : Icons.check_circle, 
+                  color: transacao.status == 'pendente' ? Colors.orange : Colors.blue, 
+                  size: 32
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Transferência Realizada!',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
+                    transacao.status == 'pendente' ? 'Transferência Pendente!' : 'Transferência Realizada!',
+                    style: TextStyle(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.bold, 
+                      color: transacao.status == 'pendente' ? Colors.orange : Colors.blue
+                    ),
                   ),
                 ),
               ],
@@ -114,10 +122,15 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('A transferência foi realizada com sucesso!', style: TextStyle(fontSize: 16)),
-                SizedBox(height: 12),
+                Text(
+                  transacao.status == 'pendente' 
+                    ? 'A transferência foi enviada e está aguardando aprovação do administrador.'
+                    : 'A transferência foi realizada com sucesso!', 
+                  style: const TextStyle(fontSize: 16)
+                ),
+                const SizedBox(height: 12),
                 Text('Hash: ${transacao.hash}', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text('Status: ${transacao.status ?? 'aprovada'}', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
               ],
             ),

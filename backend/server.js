@@ -5,8 +5,6 @@ require('dotenv').config(); // <--- DEVE vir antes de tudo
 const express = require('express'); // Framework web para Node.js
 const mongoose = require('mongoose'); // ODM para MongoDB
 const cors = require('cors'); // Middleware para habilitar CORS
-const helmet = require('helmet'); // Middleware de segurança HTTP
-const rateLimit = require('express-rate-limit'); // Middleware para limitar requisições
 const path = require('path'); // Utilitário para manipulação de caminhos
 
 // Importa rotas
@@ -22,26 +20,16 @@ const Achievement = require('./models/achievementModel');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware de segurança HTTP (protege contra várias vulnerabilidades)
-app.use(helmet());
-
-// Configuração do CORS para permitir requisições de origens específicas
+// Configuração CORS mais permissiva para desenvolvimento
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:8000'],
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true
 }));
 
-// Limita o número de requisições por IP para evitar ataques de força bruta/DDOS
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // limite de 100 requests por IP
-  message: 'Muitas requisições deste IP, tente novamente mais tarde.'
-});
-app.use('/api/', limiter);
-
-// Middleware para interpretar JSON e dados de formulários
-app.use(express.json({ limit: '10mb' })); // Aceita JSON até 10MB
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static('public'));
 
 // Servir arquivos estáticos da pasta uploads (ex: fotos de perfil, evidências)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

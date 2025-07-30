@@ -83,7 +83,11 @@ router.post('/transferir', verificarToken, async (req, res) => {
 
         // Se professor transferindo para aluno, criar transação pendente
         let status = 'aprovada';
-        if (req.user.role === 'professor' && usuarioDestino.role === 'aluno') {
+        const roleOrigem = req.user.role;
+        const roleDestino = usuarioDestino.role;
+        
+        // Verificar se é professor transferindo para aluno
+        if (roleOrigem === 'professor' && roleDestino === 'aluno') {
             status = 'pendente';
         }
 
@@ -186,7 +190,7 @@ router.post('/recompensa', verificarProfessor, async (req, res) => {
 });
 
 // GET /api/transaction/todas - Listar todas as transações (admin)
-router.get('/todas', verificarAdmin, async (req, res) => {
+router.get('/todas', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const { page = 1, limit = 20, tipo, origem, destino } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -225,7 +229,7 @@ router.get('/todas', verificarAdmin, async (req, res) => {
 });
 
 // POST /api/transaction/:id/aprovar - Aprovar transferência pendente (admin)
-router.post('/:id/aprovar', verificarAdmin, async (req, res) => {
+router.post('/:id/aprovar', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const transacao = await Transaction.findById(req.params.id);
         if (!transacao) {
@@ -251,7 +255,7 @@ router.post('/:id/aprovar', verificarAdmin, async (req, res) => {
 });
 
 // POST /api/transaction/:id/recusar - Recusar transferência pendente (admin)
-router.post('/:id/recusar', verificarAdmin, async (req, res) => {
+router.post('/:id/recusar', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const transacao = await Transaction.findById(req.params.id);
         if (!transacao) {

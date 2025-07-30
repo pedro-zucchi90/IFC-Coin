@@ -78,11 +78,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _silentRefresh() async {
+    if (!mounted) return;
+    
     try {
       final currentBalance = context.read<AuthProvider>().user?.saldo ?? 0;
       await context.read<AuthProvider>().silentUpdateUserData();
       
-      // Verificar se o saldo mudou
+      // Verificar se o saldo mudou e se o widget ainda está montado
+      if (!mounted) return;
+      
       final newBalance = context.read<AuthProvider>().user?.saldo ?? 0;
       if (newBalance != _lastKnownBalance && _lastKnownBalance > 0) {
         setState(() {
@@ -102,12 +106,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _lastKnownBalance = newBalance;
     } catch (e) {
       // Ignorar erros em atualizações silenciosas
-      print('Erro na atualização silenciosa: $e');
+      if (mounted) {
+        print('Erro na atualização silenciosa: $e');
+      }
     }
   }
 
   Future<void> _refreshUserData() async {
-    if (_isRefreshing) return;
+    if (_isRefreshing || !mounted) return;
     
     setState(() {
       _isRefreshing = true;

@@ -35,6 +35,30 @@ class TransactionService {
     }
   }
 
+  // Listar todas as transações (para admin)
+  Future<List<Transaction>> listarTodasTransacoes({int page = 1, int limit = 100}) async {
+    final token = _authService.token;
+    if (token == null) throw Exception('Usuário não autenticado');
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/transaction/todas?page=$page&limit=$limit'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List<dynamic> transacoesJson = data['transacoes'];
+      final transacoes = transacoesJson.map((json) => Transaction.fromJson(json)).toList();
+      
+      return transacoes;
+    } else {
+      throw Exception('Erro ao carregar transações');
+    }
+  }
+
   // Transferir coins para outro usuário
   Future<Transaction> transferir({required String destinoMatricula, required int quantidade, String? descricao}) async {
     final token = _authService.token;

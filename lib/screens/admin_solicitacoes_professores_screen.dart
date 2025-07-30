@@ -52,17 +52,39 @@ class _AdminSolicitacoesProfessoresScreenState extends State<AdminSolicitacoesPr
         status: _filtroStatus == 'todas' ? null : _filtroStatus,
       );
 
-      setState(() {
-        _estatisticas = stats;
-        _solicitacoes = resultado['solicitacoes'];
-        _totalPaginas = resultado['paginacao']['paginas'];
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _estatisticas = stats;
+          _solicitacoes = resultado['solicitacoes'];
+          _totalPaginas = resultado['paginacao']['paginas'];
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+        
+        // Mostrar mensagem de erro mais amigável
+        String mensagemErro = e.toString();
+        if (mensagemErro.contains('Sessão expirada')) {
+          mensagemErro = 'Sua sessão expirou. Faça login novamente.';
+        } else if (mensagemErro.contains('Acesso negado')) {
+          mensagemErro = 'Você não tem permissão para acessar esta funcionalidade.';
+        } else if (mensagemErro.contains('conexão')) {
+          mensagemErro = 'Erro de conexão. Verifique sua internet e tente novamente.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(mensagemErro),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 

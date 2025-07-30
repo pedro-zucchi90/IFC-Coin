@@ -42,7 +42,88 @@ const upload = multer({
   }
 });
 
-// GET /api/goal/listar - Listar metas disponíveis
+// GET /api/goal - Listar todas as metas (admin) ou metas disponíveis (usuário)
+router.get('/', verificarToken, async (req, res) => {
+    try {
+        const { tipo, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Se for admin, mostrar todas as metas
+        if (req.user.role === 'admin') {
+            const filtros = {};
+            if (tipo) filtros.tipo = tipo;
+
+            const metas = await Goal.find(filtros)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit));
+
+            const total = await Goal.countDocuments(filtros);
+
+            res.json({
+                metas: metas,
+                paginacao: {
+                    pagina: parseInt(page),
+                    limite: parseInt(limit),
+                    total,
+                    paginas: Math.ceil(total / parseInt(limit))
+                }
+            });
+        } else {
+            // Para usuários normais, mostrar apenas metas ativas e válidas
+            const filtros = { ativo: true };
+            if (tipo) filtros.tipo = tipo;
+
+            // Validade temporal: metas sem data de fim ou com data de fim futura
+            const agora = new Date();
+            filtros.$or = [
+                { dataFim: null },
+                { dataFim: { $gte: agora } }
+            ];
+
+            // Busca metas no banco
+            const metas = await Goal.find(filtros)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit));
+
+            // Marca se o usuário já concluiu cada meta
+            const metasComStatus = await Promise.all(metas.map(async (meta) => {
+                const usuarioConcluiu = meta.usuariosConcluidos.includes(req.user._id);
+                let temSolicitacaoPendente = false;
+                if (!usuarioConcluiu && meta.requerAprovacao) {
+                    const pendente = await GoalRequest.findOne({ goal: meta._id, aluno: req.user._id, status: 'pendente' });
+                    temSolicitacaoPendente = !!pendente;
+                }
+                return {
+                    ...meta.toObject(),
+                    usuarioConcluiu,
+                    temSolicitacaoPendente
+                };
+            }));
+
+            const total = await Goal.countDocuments(filtros);
+
+            res.json({
+                metas: metasComStatus,
+                paginacao: {
+                    pagina: parseInt(page),
+                    limite: parseInt(limit),
+                    total,
+                    paginas: Math.ceil(total / parseInt(limit))
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Erro ao listar metas:', error);
+        res.status(500).json({
+            message: 'Erro interno do servidor'
+        });
+    }
+});
+
+// GET /api/goal/listar - Listar metas disponíveis (mantido para compatibilidade)
 router.get('/listar', verificarToken, async (req, res) => {
     try {
         const { tipo, page = 1, limit = 10 } = req.query;
@@ -117,7 +198,72 @@ router.get('/minhas', verificarToken, async (req, res) => {
     }
 });
 
-// POST /api/goal/criar - Criar nova meta (professor/admin)
+// POST /api/goal - Criar nova meta (admin)
+router.post('/', verificarToken, verificarAdmin, async (req, res) => {
+    try {
+        const { 
+            titulo, 
+            descricao, 
+            tipo, 
+            requisito, 
+            recompensa, 
+            requerAprovacao,
+            maxConclusoes,
+            periodoValidade,
+            dataInicio,
+            dataFim,
+            evidenciaObrigatoria,
+            tipoEvidencia,
+            descricaoEvidencia
+        } = req.body;
+
+        // Validação dos campos obrigatórios
+        if (!titulo || !descricao || !tipo || !requisito || !recompensa) {
+            return res.status(400).json({
+                message: 'Título, descrição, tipo, requisito e recompensa são obrigatórios'
+            });
+        }
+
+        if (requisito <= 0 || recompensa <= 0) {
+            return res.status(400).json({
+                message: 'Requisito e recompensa devem ser valores positivos'
+            });
+        }
+
+        // Cria nova meta
+        const novaMeta = new Goal({
+            titulo: titulo.trim(),
+            descricao: descricao.trim(),
+            tipo,
+            requisito,
+            recompensa,
+            usuariosConcluidos: [],
+            requerAprovacao: !!requerAprovacao,
+            maxConclusoes: maxConclusoes || null,
+            periodoValidade: periodoValidade || null,
+            dataInicio: dataInicio ? new Date(dataInicio) : new Date(),
+            dataFim: dataFim ? new Date(dataFim) : null,
+            evidenciaObrigatoria: !!evidenciaObrigatoria,
+            tipoEvidencia: tipoEvidencia || 'texto',
+            descricaoEvidencia: descricaoEvidencia || null
+        });
+
+        await novaMeta.save();
+
+        res.status(201).json({
+            message: 'Meta criada com sucesso',
+            meta: novaMeta
+        });
+
+    } catch (error) {
+        console.error('Erro ao criar meta:', error);
+        res.status(500).json({
+            message: 'Erro interno do servidor'
+        });
+    }
+});
+
+// POST /api/goal/criar - Criar nova meta (professor/admin) - mantido para compatibilidade
 router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
     try {
         const { titulo, descricao, tipo, requisito, recompensa, requerAprovacao } = req.body;
@@ -324,7 +470,21 @@ router.post('/solicitacoes/:id/recusar', verificarToken, async (req, res) => {
 // PUT /api/goal/:id - Atualizar meta (admin)
 router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
-        const { titulo, descricao, tipo, requisito, recompensa, requerAprovacao } = req.body;
+        const { 
+            titulo, 
+            descricao, 
+            tipo, 
+            requisito, 
+            recompensa, 
+            requerAprovacao,
+            maxConclusoes,
+            periodoValidade,
+            dataInicio,
+            dataFim,
+            evidenciaObrigatoria,
+            tipoEvidencia,
+            descricaoEvidencia
+        } = req.body;
         const metaId = req.params.id;
 
         const meta = await Goal.findById(metaId);
@@ -335,12 +495,19 @@ router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
         }
 
         // Atualiza campos
-        if (titulo) meta.titulo = titulo.trim();
-        if (descricao) meta.descricao = descricao.trim();
-        if (tipo) meta.tipo = tipo;
+        if (titulo !== undefined) meta.titulo = titulo.trim();
+        if (descricao !== undefined) meta.descricao = descricao.trim();
+        if (tipo !== undefined) meta.tipo = tipo;
         if (requisito !== undefined) meta.requisito = requisito;
         if (recompensa !== undefined) meta.recompensa = recompensa;
         if (requerAprovacao !== undefined) meta.requerAprovacao = !!requerAprovacao;
+        if (maxConclusoes !== undefined) meta.maxConclusoes = maxConclusoes;
+        if (periodoValidade !== undefined) meta.periodoValidade = periodoValidade;
+        if (dataInicio !== undefined) meta.dataInicio = dataInicio ? new Date(dataInicio) : new Date();
+        if (dataFim !== undefined) meta.dataFim = dataFim ? new Date(dataFim) : null;
+        if (evidenciaObrigatoria !== undefined) meta.evidenciaObrigatoria = !!evidenciaObrigatoria;
+        if (tipoEvidencia !== undefined) meta.tipoEvidencia = tipoEvidencia;
+        if (descricaoEvidencia !== undefined) meta.descricaoEvidencia = descricaoEvidencia;
 
         await meta.save();
 

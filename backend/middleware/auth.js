@@ -50,10 +50,21 @@ const verificarToken = async (req, res, next) => {
 
         //adicionar o usuário ao request
         req.user = {
-            ...user.toPublicJSON(),
             _id: user._id,
-            role: user.role
+            nome: user.nome,
+            email: user.email,
+            matricula: user.matricula,
+            role: user.role,
+            saldo: user.saldo,
+            curso: user.curso,
+            turmas: user.turmas,
+            fotoPerfil: user.fotoPerfil,
+            statusAprovacao: user.statusAprovacao,
+            ativo: user.ativo,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
         };
+        
         next();
     } catch (error) {
         return res.status(500).json({

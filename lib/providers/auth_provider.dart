@@ -175,10 +175,15 @@ class AuthProvider extends ChangeNotifier {
     
     try {
       _user = await _authService.updateUserData();
-      notifyListeners();
+      // Só notifica se ainda há listeners ativos
+      if (hasListeners) {
+        notifyListeners();
+      }
     } catch (e) {
       // Não mostrar erro para atualizações silenciosas
-      print('Erro na atualização silenciosa: $e');
+      if (kDebugMode) {
+        print('Erro na atualização silenciosa: $e');
+      }
     }
   }
 
@@ -191,15 +196,22 @@ class AuthProvider extends ChangeNotifier {
       _user = await _authService.updateUserData();
       final newBalance = _user?.saldo ?? 0;
       
-      notifyListeners();
+      // Só notifica se ainda há listeners ativos
+      if (hasListeners) {
+        notifyListeners();
+      }
       
       // Se o saldo mudou, mostrar feedback visual
       if (newBalance != oldBalance) {
         // O feedback visual será tratado na UI
-        print('Saldo atualizado: $oldBalance -> $newBalance');
+        if (kDebugMode) {
+          print('Saldo atualizado: $oldBalance -> $newBalance');
+        }
       }
     } catch (e) {
-      print('Erro na atualização instantânea: $e');
+      if (kDebugMode) {
+        print('Erro na atualização instantânea: $e');
+      }
     }
   }
 
