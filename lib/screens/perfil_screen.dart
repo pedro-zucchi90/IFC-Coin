@@ -8,7 +8,7 @@ import '../models/achievement_model.dart';
 import '../services/achievement_service.dart';
 import '../services/user_service.dart';
 import '../config.dart';
-import 'historico_transacoes_screen.dart';
+import 'conquistas_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -26,6 +26,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   String? _error;
   bool _isEditing = false;
   bool _isUploadingPhoto = false;
+  Map<String, dynamic>? _estatisticas;
 
   // Controllers para edição
   final TextEditingController _nomeController = TextEditingController();
@@ -55,6 +56,29 @@ class _PerfilScreenState extends State<PerfilScreen> {
     });
 
     try {
+      // Carregar conquistas do usuário
+      final response = await _achievementService.getConquistasUsuario();
+      
+      if (response['success']) {
+        setState(() {
+          _conquistas.clear();
+          for (var conquista in response['conquistas']) {
+            if (conquista['achievement'] != null) {
+              try {
+                _conquistas.add(Achievement.fromJson(conquista['achievement']));
+              } catch (e) {
+                // Ignorar conquistas com erro de parsing
+              }
+            }
+          }
+          _estatisticas = response['estatisticas'];
+        });
+      } else {
+        setState(() {
+          _error = response['error'];
+        });
+      }
+      
       setState(() {
         _isLoading = false;
       });
@@ -65,6 +89,60 @@ class _PerfilScreenState extends State<PerfilScreen> {
       });
     }
   }
+
+  List<Widget> _buildConquistasPorCategoria() {
+    // Agrupar conquistas por categoria
+    Map<String, List<Achievement>> conquistasPorCategoria = {};
+    
+    for (var conquista in _conquistas) {
+      String categoria = conquista.categoria ?? 'Geral';
+      if (!conquistasPorCategoria.containsKey(categoria)) {
+        conquistasPorCategoria[categoria] = [];
+      }
+      conquistasPorCategoria[categoria]!.add(conquista);
+    }
+
+    List<Widget> widgets = [];
+    
+    conquistasPorCategoria.forEach((categoria, conquistas) {
+      // Título da categoria
+      widgets.add(
+        Container(
+          margin: const EdgeInsets.only(top: 16, bottom: 8),
+          child: Row(
+            children: [
+                             Container(
+                 width: 4,
+                 height: 20,
+                 decoration: BoxDecoration(
+                   color: _ConquistaCard._getCategoriaColor(categoria),
+                   borderRadius: BorderRadius.circular(2),
+                 ),
+               ),
+              const SizedBox(width: 8),
+              Text(
+                categoria,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      
+      // Conquistas da categoria
+      widgets.addAll(
+        conquistas.map((conquista) => _ConquistaCard(conquista: conquista))
+      );
+    });
+
+    return widgets;
+  }
+
+
 
   Future<void> _salvarAlteracoes() async {
     try {
@@ -310,10 +388,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Card do perfil
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
+                                 Card(
+                   child: Padding(
+                     padding: const EdgeInsets.all(16),
+                     child: Column(
                       children: [
                         // Foto de perfil
                         Stack(
@@ -435,27 +513,29 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         
                         const SizedBox(height: 16),
                         
-                        // Informações do usuário
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _InfoItem(
-                              label: 'Matrícula',
-                              value: user.matricula,
-                              icon: Icons.badge,
-                            ),
-                            _InfoItem(
-                              label: 'Role',
-                              value: user.role.toUpperCase(),
-                              icon: Icons.person_outline,
-                            ),
-                            _InfoItem(
-                              label: 'Saldo',
-                              value: '${user.saldo} coins',
-                              icon: Icons.monetization_on,
-                            ),
-                          ],
-                        ),
+                                                 // Informações do usuário
+                         Wrap(
+                           spacing: 16,
+                           runSpacing: 8,
+                           alignment: WrapAlignment.spaceEvenly,
+                           children: [
+                             _InfoItem(
+                               label: 'Matrícula',
+                               value: user.matricula,
+                               icon: Icons.badge,
+                             ),
+                             _InfoItem(
+                               label: 'Role',
+                               value: user.role.toUpperCase(),
+                               icon: Icons.person_outline,
+                             ),
+                             _InfoItem(
+                               label: 'Saldo',
+                               value: '${user.saldo} coins',
+                               icon: Icons.monetization_on,
+                             ),
+                           ],
+                         ),
                         
                         // Curso (apenas para alunos)
                         if (user.role == 'aluno') ...[
@@ -484,146 +564,174 @@ class _PerfilScreenState extends State<PerfilScreen> {
                               ],
                             ),
                         ],
+                        
+                                                 // Estatísticas
+                         if (!_isEditing && _estatisticas != null) ...[
+                           const SizedBox(height: 32),
+                           const Divider(),
+                           const SizedBox(height: 16),
+                           
+                           Container(
+                             padding: const EdgeInsets.all(16),
+                             decoration: BoxDecoration(
+                               color: Colors.blue.shade50,
+                               borderRadius: BorderRadius.circular(12),
+                               border: Border.all(color: Colors.blue.shade200),
+                             ),
+                             child: Column(
+                               children: [
+                                 const Text(
+                                   'Estatísticas',
+                                   style: TextStyle(
+                                     fontSize: 16,
+                                     fontWeight: FontWeight.bold,
+                                   ),
+                                 ),
+                                 const SizedBox(height: 12),
+                                 Wrap(
+                                   spacing: 16,
+                                   runSpacing: 8,
+                                   alignment: WrapAlignment.spaceEvenly,
+                                   children: [
+                                     _StatItem(
+                                       label: 'Transferências',
+                                       value: '${_estatisticas!['totalTransferencias'] ?? 0}',
+                                       icon: Icons.swap_horiz,
+                                     ),
+                                     _StatItem(
+                                       label: 'Metas Concluídas',
+                                       value: '${_estatisticas!['totalMetasConcluidas'] ?? 0}',
+                                       icon: Icons.check_circle,
+                                     ),
+                                     _StatItem(
+                                       label: 'Dias Consecutivos',
+                                       value: '${_estatisticas!['diasConsecutivos'] ?? 0}',
+                                       icon: Icons.calendar_today,
+                                     ),
+                                   ],
+                                 ),
+                               ],
+                             ),
+                           ),
+                           
+                           const SizedBox(height: 24),
+                         ],
+                         
+                         // Seção de Conquistas
+                         if (!_isEditing) ...[
+                           // Título da seção
+                           Row(
+                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                             children: [
+                               Row(
+                                 children: [
+                                   Icon(Icons.emoji_events, color: Colors.amber),
+                                   const SizedBox(width: 8),
+                                   const Text(
+                                     'Conquistas',
+                                     style: TextStyle(
+                                       fontSize: 20,
+                                       fontWeight: FontWeight.bold,
+                                     ),
+                                   ),
+                                 ],
+                               ),
+                               TextButton.icon(
+                                 onPressed: () {
+                                   Navigator.push(
+                                     context,
+                                     MaterialPageRoute(
+                                       builder: (context) => const ConquistasScreen(),
+                                     ),
+                                   );
+                                 },
+                                 icon: const Icon(Icons.list, size: 16),
+                                 label: const Text('Ver todas'),
+                                 style: TextButton.styleFrom(
+                                   foregroundColor: Colors.blue,
+                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                 ),
+                               ),
+                             ],
+                           ),
+                           
+                           const SizedBox(height: 16),
+                          
+                          // Lista de conquistas organizadas por categoria
+                          if (_conquistas.isNotEmpty) ...[
+                            const Text(
+                              'Conquistas Desbloqueadas',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ..._buildConquistasPorCategoria(),
+                          ] else ...[
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.emoji_events_outlined,
+                                    size: 48,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Nenhuma conquista ainda',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Continue usando o app para desbloquear conquistas!',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ],
                     ),
                   ),
                 ),
                 
-                const SizedBox(height: 24),
-                
-                // Seção de Conquistas
-                Center(
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Minhas Conquistas',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-                ),
-                
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error != null
-                        ? Center(
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Erro ao carregar conquistas',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                                ElevatedButton(
-                                  onPressed: _carregarDados,
-                                  child: Text('Tentar novamente'),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _conquistas.isEmpty
-                            ? Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.emoji_events_outlined,
-                                        size: 64,
-                                        color: Colors.grey.shade400,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Nenhuma conquista ainda',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Participe de atividades para desbloquear conquistas!',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade500,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _conquistas.length,
-                                itemBuilder: (context, index) {
-                                  final conquista = _conquistas[index];
-                                  return Card(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    child: ListTile(
-                                      leading: conquista.icone != null
-                                          ? Text(
-                                              conquista.icone!,
-                                              style: const TextStyle(fontSize: 32),
-                                            )
-                                          : Icon(
-                                              Icons.emoji_events,
-                                              color: Colors.amber,
-                                              size: 32,
-                                            ),
-                                      title: Text(
-                                        conquista.nome,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      subtitle: Text(conquista.descricao),
-                                      trailing: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _getTipoColor(conquista.tipo),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          conquista.tipo.toUpperCase(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                
-                // Botão para histórico de transações
-                Center(
-                  child: ElevatedButton.icon(
-                    icon: Icon(Icons.receipt_long),
-                    label: Text('Ver Histórico de Transações'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HistoricoTransacoesScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                                 const SizedBox(height: 24),
+                 
+                 // Indicador de carregamento ou erro
+                 _isLoading
+                     ? const Center(child: CircularProgressIndicator())
+                     : _error != null
+                         ? Center(
+                             child: Column(
+                               children: [
+                                 Text(
+                                   'Erro ao carregar conquistas',
+                                   style: TextStyle(color: Colors.red),
+                                 ),
+                                 ElevatedButton(
+                                   onPressed: _carregarDados,
+                                   child: Text('Tentar novamente'),
+                                 ),
+                               ],
+                             ),
+                           )
+                         : const SizedBox.shrink(),
               ],
             ),
           );
@@ -646,6 +754,176 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 }
 
+// Widget para exibir estatísticas
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.blue, size: 20),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Widget para exibir conquista
+class _ConquistaCard extends StatelessWidget {
+  final Achievement conquista;
+
+  const _ConquistaCard({required this.conquista});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Ícone da conquista
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.amber.shade100,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Center(
+              child: conquista.icone != null
+                  ? Text(
+                      conquista.icone!,
+                      style: const TextStyle(fontSize: 24),
+                    )
+                  : const Icon(
+                      Icons.emoji_events,
+                      color: Colors.amber,
+                      size: 24,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          
+          // Informações da conquista
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  conquista.nome,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  conquista.descricao,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                if (conquista.requisitos != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    conquista.requisitos!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          // Categoria
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getCategoriaColor(conquista.categoria ?? conquista.tipo),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              (conquista.categoria ?? conquista.tipo).toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Color _getCategoriaColor(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'transferências':
+        return Colors.blue;
+      case 'recebimentos':
+        return Colors.green;
+      case 'metas':
+        return Colors.orange;
+      case 'coins':
+        return Colors.amber;
+      case 'frequência':
+        return Colors.purple;
+      case 'perfil':
+        return Colors.teal;
+      case 'balanço':
+        return Colors.indigo;
+      default:
+        return Colors.grey;
+    }
+  }
+}
+
 class _InfoItem extends StatelessWidget {
   final String label;
   final String value;
@@ -659,25 +937,31 @@ class _InfoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.blue, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.blue, size: 20),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

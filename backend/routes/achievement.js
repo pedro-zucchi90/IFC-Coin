@@ -1,10 +1,10 @@
 const express = require('express');
 const Achievement = require('../models/achievementModel');
-const { verificarToken, verificarAdmin } = require('../middleware/auth');
+const { verificarToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/achievement - Listar todas as conquistas (admin) ou conquistas disponíveis (usuário)
+// GET /api/achievement - Listar todas as conquistas disponíveis (somente leitura)
 router.get('/', verificarToken, async (req, res) => {
     try {
         const { tipo, categoria, page = 1, limit = 10 } = req.query;
@@ -90,140 +90,6 @@ router.get('/categorias', verificarToken, async (req, res) => {
     }
 });
 
-// POST /api/achievement - Criar nova conquista (admin)
-router.post('/', verificarToken, verificarAdmin, async (req, res) => {
-    try {
-        const { nome, descricao, tipo, categoria, icone, requisitos } = req.body;
-
-        if (!nome || !descricao || !tipo) {
-            return res.status(400).json({
-                message: 'Nome, descrição e tipo são obrigatórios'
-            });
-        }
-
-        const novaConquista = new Achievement({
-            nome: nome.trim(),
-            descricao: descricao.trim(),
-            tipo,
-            categoria: categoria || null,
-            icone: icone || null,
-            requisitos: requisitos || null
-        });
-
-        await novaConquista.save();
-
-        res.status(201).json({
-            message: 'Conquista criada com sucesso',
-            conquista: novaConquista
-        });
-
-    } catch (error) {
-        console.error('Erro ao criar conquista:', error);
-        res.status(500).json({
-            message: 'Erro interno do servidor'
-        });
-    }
-});
-
-// POST /api/achievement/criar - Criar nova conquista (admin) - mantido para compatibilidade
-router.post('/criar', verificarAdmin, async (req, res) => {
-    console.log('Tentativa de criar conquista:', req.user, req.headers.authorization);
-    try {
-        const { nome, descricao, tipo, categoria, icone, requisitos } = req.body;
-
-        if (!nome || !descricao || !tipo) {
-            return res.status(400).json({
-                message: 'Nome, descrição e tipo são obrigatórios'
-            });
-        }
-
-        const novaConquista = new Achievement({
-            nome: nome.trim(),
-            descricao: descricao.trim(),
-            tipo,
-            categoria: categoria || null,
-            icone: icone || null,
-            requisitos: requisitos || null
-        });
-
-        await novaConquista.save();
-
-        res.status(201).json({
-            message: 'Conquista criada com sucesso',
-            conquista: novaConquista
-        });
-
-    } catch (error) {
-        console.error('Erro ao criar conquista:', error);
-        res.status(500).json({
-            message: 'Erro interno do servidor'
-        });
-    }
-});
-
-// PUT /api/achievement/:id - Atualizar conquista (admin)
-router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
-    console.log('Tentativa de editar conquista:', req.user, req.headers.authorization);
-    try {
-        const { nome, descricao, tipo, categoria, icone, requisitos } = req.body;
-        const conquistaId = req.params.id;
-
-        const conquista = await Achievement.findById(conquistaId);
-        if (!conquista) {
-            return res.status(404).json({
-                message: 'Conquista não encontrada'
-            });
-        }
-
-        // Atualizar campos
-        if (nome) conquista.nome = nome.trim();
-        if (descricao) conquista.descricao = descricao.trim();
-        if (tipo) conquista.tipo = tipo;
-        if (categoria !== undefined) conquista.categoria = categoria;
-        if (icone !== undefined) conquista.icone = icone;
-        if (requisitos !== undefined) conquista.requisitos = requisitos;
-
-        await conquista.save();
-
-        res.json({
-            message: 'Conquista atualizada com sucesso',
-            conquista
-        });
-
-    } catch (error) {
-        console.error('Erro ao atualizar conquista:', error);
-        res.status(500).json({
-            message: 'Erro interno do servidor'
-        });
-    }
-});
-
-// DELETE /api/achievement/:id - Deletar conquista (admin)
-router.delete('/:id', verificarToken, verificarAdmin, async (req, res) => {
-    console.log('Tentativa de deletar conquista:', req.user, req.headers.authorization);
-    try {
-        const conquista = await Achievement.findById(req.params.id);
-
-        if (!conquista) {
-            return res.status(404).json({
-                message: 'Conquista não encontrada'
-            });
-        }
-
-        await Achievement.findByIdAndDelete(req.params.id);
-
-        res.json({
-            message: 'Conquista deletada com sucesso'
-        });
-
-    } catch (error) {
-        console.error('Erro ao deletar conquista:', error);
-        res.status(500).json({
-            message: 'Erro interno do servidor'
-        });
-    }
-});
-
 // GET /api/achievement/:id - Obter conquista específica
 router.get('/:id', verificarToken, async (req, res) => {
     try {
@@ -236,6 +102,54 @@ router.get('/:id', verificarToken, async (req, res) => {
         res.json(achievement);
     } catch (error) {
         console.error('Erro ao buscar conquista:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+});
+
+// GET /api/achievement/usuario/conquistas - Obter conquistas do usuário logado
+router.get('/usuario/conquistas', verificarToken, async (req, res) => {
+    try {
+        const User = require('../models/userModel');
+        const user = await User.findById(req.user._id).populate('conquistas.achievement');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        res.json({
+            conquistas: user.conquistas,
+            estatisticas: user.estatisticas
+        });
+    } catch (error) {
+        console.error('Erro ao buscar conquistas do usuário:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+});
+
+// POST /api/achievement/usuario/verificar - Verificar e adicionar conquistas automaticamente
+router.post('/usuario/verificar', verificarToken, async (req, res) => {
+    try {
+        const User = require('../models/userModel');
+        const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        // Verificar conquistas automaticamente
+        const conquistasAdicionadas = await user.verificarConquistas();
+        
+        // Buscar usuário atualizado com conquistas populadas
+        const userAtualizado = await User.findById(req.user._id).populate('conquistas.achievement');
+
+        res.json({
+            message: `${conquistasAdicionadas.length} conquista(s) adicionada(s)`,
+            conquistasAdicionadas,
+            conquistas: userAtualizado.conquistas,
+            estatisticas: userAtualizado.estatisticas
+        });
+    } catch (error) {
+        console.error('Erro ao verificar conquistas:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 });

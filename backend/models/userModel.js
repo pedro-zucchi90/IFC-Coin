@@ -69,6 +69,25 @@ const userSchema = new mongoose.Schema({
     ativo: {
         type: Boolean,
         default: true //usuário ativo ou não
+    },
+    conquistas: [{
+        achievement: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Achievement'
+        },
+        dataConquista: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    estatisticas: {
+        totalTransferencias: { type: Number, default: 0 },
+        totalTransferenciasRecebidas: { type: Number, default: 0 },
+        totalMetasConcluidas: { type: Number, default: 0 },
+        totalCoinsGanhos: { type: Number, default: 0 },
+        diasConsecutivos: { type: Number, default: 0 },
+        ultimoLoginConsecutivo: { type: Date, default: Date.now },
+        temFotoPerfil: { type: Boolean, default: false }
     }
 }, 
 { timestamps: true }); //adiciona createdAt e updatedAt automaticamente
@@ -122,6 +141,200 @@ userSchema.methods.removerCoins = function(quantidade) {
 // Método para atualizar a data do último login
 userSchema.methods.atualizarUltimoLogin = function() {
     this.ultimoLogin = new Date();
+    return this.save();
+};
+
+// Método para adicionar conquista ao usuário
+userSchema.methods.adicionarConquista = async function(achievementId) {
+    // Verificar se já tem essa conquista
+    const jaTemConquista = this.conquistas.some(c => c.achievement.toString() === achievementId.toString());
+    if (!jaTemConquista) {
+        this.conquistas.push({
+            achievement: achievementId,
+            dataConquista: new Date()
+        });
+        await this.save();
+        return true; // Nova conquista adicionada
+    }
+    return false; // Já tinha a conquista
+};
+
+// Método para verificar e adicionar conquistas automaticamente
+userSchema.methods.verificarConquistas = async function() {
+    const Achievement = require('./achievementModel');
+    const conquistasAdicionadas = [];
+
+    // Buscar todas as conquistas disponíveis
+    const todasConquistas = await Achievement.find({});
+
+    for (const conquista of todasConquistas) {
+        // Verificar se já tem essa conquista
+        const jaTem = this.conquistas.some(c => c.achievement.toString() === conquista._id.toString());
+        if (jaTem) continue;
+
+        // Verificar requisitos baseados no tipo de conquista
+        let deveAdicionar = false;
+
+        switch (conquista.tipo) {
+            // Transferências enviadas
+            case 'primeira_transferencia':
+                if (this.estatisticas.totalTransferencias >= 1) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'transferencias_10':
+                if (this.estatisticas.totalTransferencias >= 10) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'transferencias_50':
+                if (this.estatisticas.totalTransferencias >= 50) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'transferencias_100':
+                if (this.estatisticas.totalTransferencias >= 100) {
+                    deveAdicionar = true;
+                }
+                break;
+
+            // Transferências recebidas
+            case 'primeira_recebida':
+                if (this.estatisticas.totalTransferenciasRecebidas >= 1) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'recebidas_10':
+                if (this.estatisticas.totalTransferenciasRecebidas >= 10) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'recebidas_50':
+                if (this.estatisticas.totalTransferenciasRecebidas >= 50) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'recebidas_100':
+                if (this.estatisticas.totalTransferenciasRecebidas >= 100) {
+                    deveAdicionar = true;
+                }
+                break;
+
+            // Metas
+            case 'primeira_meta':
+                if (this.estatisticas.totalMetasConcluidas >= 1) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'metas_10':
+                if (this.estatisticas.totalMetasConcluidas >= 10) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'metas_50':
+                if (this.estatisticas.totalMetasConcluidas >= 50) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'metas_100':
+                if (this.estatisticas.totalMetasConcluidas >= 100) {
+                    deveAdicionar = true;
+                }
+                break;
+
+            // Coins acumulados
+            case 'coins_100':
+                if (this.estatisticas.totalCoinsGanhos >= 100) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'coins_500':
+                if (this.estatisticas.totalCoinsGanhos >= 500) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'coins_1000':
+                if (this.estatisticas.totalCoinsGanhos >= 1000) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'coins_5000':
+                if (this.estatisticas.totalCoinsGanhos >= 5000) {
+                    deveAdicionar = true;
+                }
+                break;
+
+            // Frequência
+            case 'login_consecutivo_7':
+                if (this.estatisticas.diasConsecutivos >= 7) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'login_consecutivo_30':
+                if (this.estatisticas.diasConsecutivos >= 30) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'login_consecutivo_100':
+                if (this.estatisticas.diasConsecutivos >= 100) {
+                    deveAdicionar = true;
+                }
+                break;
+
+            // Foto de perfil
+            case 'foto_perfil':
+                if (this.estatisticas.temFotoPerfil) {
+                    deveAdicionar = true;
+                }
+                break;
+
+            // Balanço geral
+            case 'equilibrado':
+                if (this.estatisticas.totalTransferencias >= 10 && 
+                    this.estatisticas.totalTransferenciasRecebidas >= 10) {
+                    deveAdicionar = true;
+                }
+                break;
+            case 'social':
+                if (this.estatisticas.totalTransferencias >= 5 && 
+                    this.estatisticas.totalTransferenciasRecebidas >= 5) {
+                    deveAdicionar = true;
+                }
+                break;
+        }
+
+        if (deveAdicionar) {
+            await this.adicionarConquista(conquista._id);
+            conquistasAdicionadas.push(conquista);
+        }
+    }
+
+    return conquistasAdicionadas;
+};
+
+// Método para atualizar estatísticas
+userSchema.methods.atualizarEstatisticas = function(tipo, valor = 1) {
+    switch (tipo) {
+        case 'transferencia':
+            this.estatisticas.totalTransferencias += valor;
+            break;
+        case 'transferencia_recebida':
+            this.estatisticas.totalTransferenciasRecebidas += valor;
+            break;
+        case 'meta_concluida':
+            this.estatisticas.totalMetasConcluidas += valor;
+            break;
+        case 'coins_ganhos':
+            this.estatisticas.totalCoinsGanhos += valor;
+            break;
+        case 'login_consecutivo':
+            this.estatisticas.diasConsecutivos = valor;
+            this.estatisticas.ultimoLoginConsecutivo = new Date();
+            break;
+        case 'foto_perfil':
+            this.estatisticas.temFotoPerfil = true;
+            break;
+    }
     return this.save();
 };
 

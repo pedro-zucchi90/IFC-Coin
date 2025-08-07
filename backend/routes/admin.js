@@ -5,7 +5,7 @@ const { verificarToken, verificarAdmin } = require('../middleware/auth');
 const router = express.Router();
 
 // GET /api/admin/solicitacoes-professores - Listar solicitações de professores
-router.get('/solicitacoes-professores', verificarToken, async (req, res) => {
+router.get('/solicitacoes-professores', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
     const skip = (page - 1) * limit;
@@ -40,14 +40,8 @@ router.get('/solicitacoes-professores', verificarToken, async (req, res) => {
 });
 
 // GET /api/admin/estatisticas-solicitacoes - Obter estatísticas das solicitações
-router.get('/estatisticas-solicitacoes', verificarToken, async (req, res) => {
+router.get('/estatisticas-solicitacoes', verificarToken, verificarAdmin, async (req, res) => {
   try {
-    // Verificar se o usuário é admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        message: 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.'
-      });
-    }
 
     const pendentes = await User.countDocuments({ 
       role: 'professor', 
@@ -79,14 +73,9 @@ router.get('/estatisticas-solicitacoes', verificarToken, async (req, res) => {
 });
 
 // POST /api/admin/aprovar-professor/:id - Aprovar solicitação de professor
-router.post('/aprovar-professor/:id', verificarToken, async (req, res) => {
+router.post('/aprovar-professor/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
-        // Verificar se o usuário é admin
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({
-                message: 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.'
-            });
-        }
+
 
         const { id } = req.params;
         const { motivo } = req.body;
@@ -130,14 +119,8 @@ router.post('/aprovar-professor/:id', verificarToken, async (req, res) => {
 });
 
 // POST /api/admin/recusar-professor/:id - Recusar solicitação de professor
-router.post('/recusar-professor/:id', verificarToken, async (req, res) => {
+router.post('/recusar-professor/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
-        // Verificar se o usuário é admin
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({
-                message: 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.'
-            });
-        }
 
         const { id } = req.params;
         const { motivo } = req.body;

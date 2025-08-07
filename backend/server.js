@@ -79,5 +79,5 @@ app.use('*', (req, res) => {
 // Inicia o servidor na porta 3000 (ou definida no .env)
 app.listen(3000, '0.0.0.0', () => {
   console.log('Servidor rodando na porta 3000');
-  console.log('API disponível em: http://0.0.0.0:3000/api');
+  console.log('API disponível em: http://100.101.37.62:3000/api');
 }); 

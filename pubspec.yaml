@@ -55,6 +55,11 @@ dependencies:
   image_picker: ^1.0.4
   image_cropper: ^9.1.0
 
+  # QR Code functionality
+  qr_flutter: ^4.1.0
+  permission_handler: ^11.0.1
+  mobile_scanner: ^3.5.6
+
   # Notificações locais 
   flutter_local_notifications: ^17.0.0
   uuid: ^4.5.1

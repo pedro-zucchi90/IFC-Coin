@@ -118,6 +118,15 @@ router.post('/transferir', verificarToken, async (req, res) => {
             // Atualizar saldos imediatamente
             await origem.removerCoins(quantidade);
             await destino.adicionarCoins(quantidade);
+            
+            // Atualizar estatísticas para conquistas
+            await origem.atualizarEstatisticas('transferencia');
+            await destino.atualizarEstatisticas('transferencia_recebida');
+            await destino.atualizarEstatisticas('coins_ganhos', quantidade);
+            
+            // Verificar conquistas automaticamente
+            await origem.verificarConquistas();
+            await destino.verificarConquistas();
         }
         // Buscar transação com dados populados
         const transacaoCompleta = await Transaction.findById(transacao._id)
@@ -170,6 +179,13 @@ router.post('/recompensa', verificarProfessor, async (req, res) => {
 
         // Adicionar coins ao usuário de destino
         await usuarioDestino.adicionarCoins(quantidade);
+        
+        // Atualizar estatísticas para conquistas
+        await usuarioDestino.atualizarEstatisticas('transferencia_recebida');
+        await usuarioDestino.atualizarEstatisticas('coins_ganhos', quantidade);
+        
+        // Verificar conquistas automaticamente
+        await usuarioDestino.verificarConquistas();
 
         // Buscar transação com dados populados
         const transacaoCompleta = await Transaction.findById(transacao._id)
@@ -247,6 +263,16 @@ router.post('/:id/aprovar', verificarToken, verificarAdmin, async (req, res) => 
         const destino = await User.findById(transacao.destino);
         await origem.removerCoins(transacao.quantidade);
         await destino.adicionarCoins(transacao.quantidade);
+        
+        // Atualizar estatísticas para conquistas
+        await origem.atualizarEstatisticas('transferencia');
+        await destino.atualizarEstatisticas('transferencia_recebida');
+        await destino.atualizarEstatisticas('coins_ganhos', transacao.quantidade);
+        
+        // Verificar conquistas automaticamente
+        await origem.verificarConquistas();
+        await destino.verificarConquistas();
+        
         res.json({ message: 'Transferência aprovada e saldo transferido!' });
     } catch (error) {
         console.error('Erro ao aprovar transferência:', error);

@@ -51,7 +51,7 @@ router.get('/', verificarToken, async (req, res) => {
         // Se for admin, mostrar todas as metas
         if (req.user.role === 'admin') {
             const filtros = {};
-            if (tipo) filtros.tipo = tipo;
+            if (tipo) {filtros.tipo = tipo;}
 
             const metas = await Goal.find(filtros)
                 .sort({ createdAt: -1 })
@@ -72,7 +72,7 @@ router.get('/', verificarToken, async (req, res) => {
         } else {
             // Para usuários normais, mostrar apenas metas ativas e válidas
             const filtros = { ativo: true };
-            if (tipo) filtros.tipo = tipo;
+            if (tipo) {filtros.tipo = tipo;}
 
             // Validade temporal: metas sem data de fim ou com data de fim futura
             const agora = new Date();
@@ -131,7 +131,7 @@ router.get('/listar', verificarToken, async (req, res) => {
 
         // Filtros: apenas metas ativas e válidas
         const filtros = { ativo: true };
-        if (tipo) filtros.tipo = tipo;
+        if (tipo) {filtros.tipo = tipo;}
 
         // Validade temporal: metas sem data de fim ou com data de fim futura
         const agora = new Date();
@@ -359,6 +359,14 @@ router.post('/concluir/:id', verificarToken, upload.single('evidenciaArquivo'), 
         meta.usuariosConcluidos.push(req.user._id);
         await meta.save();
         await req.user.adicionarCoins(meta.recompensa);
+        
+        // Atualizar estatísticas para conquistas
+        await req.user.atualizarEstatisticas('meta_concluida');
+        await req.user.atualizarEstatisticas('coins_ganhos', meta.recompensa);
+        
+        // Verificar conquistas automaticamente
+        await req.user.verificarConquistas();
+        
         const Transaction = require('../models/transactionModel');
         const transacao = new Transaction({
             tipo: 'recebido',
@@ -423,6 +431,14 @@ router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
             // Adicionar coins ao aluno
             const aluno = await User.findById(solicitacao.aluno._id);
             await aluno.adicionarCoins(meta.recompensa);
+            
+            // Atualizar estatísticas para conquistas
+            await aluno.atualizarEstatisticas('meta_concluida');
+            await aluno.atualizarEstatisticas('coins_ganhos', meta.recompensa);
+            
+            // Verificar conquistas automaticamente
+            await aluno.verificarConquistas();
+            
             // Criar transação
             const Transaction = require('../models/transactionModel');
             const transacao = new Transaction({
@@ -495,19 +511,19 @@ router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
         }
 
         // Atualiza campos
-        if (titulo !== undefined) meta.titulo = titulo.trim();
-        if (descricao !== undefined) meta.descricao = descricao.trim();
-        if (tipo !== undefined) meta.tipo = tipo;
-        if (requisito !== undefined) meta.requisito = requisito;
-        if (recompensa !== undefined) meta.recompensa = recompensa;
-        if (requerAprovacao !== undefined) meta.requerAprovacao = !!requerAprovacao;
-        if (maxConclusoes !== undefined) meta.maxConclusoes = maxConclusoes;
-        if (periodoValidade !== undefined) meta.periodoValidade = periodoValidade;
-        if (dataInicio !== undefined) meta.dataInicio = dataInicio ? new Date(dataInicio) : new Date();
-        if (dataFim !== undefined) meta.dataFim = dataFim ? new Date(dataFim) : null;
-        if (evidenciaObrigatoria !== undefined) meta.evidenciaObrigatoria = !!evidenciaObrigatoria;
-        if (tipoEvidencia !== undefined) meta.tipoEvidencia = tipoEvidencia;
-        if (descricaoEvidencia !== undefined) meta.descricaoEvidencia = descricaoEvidencia;
+        if (titulo !== undefined) { meta.titulo = titulo.trim(); }
+        if (descricao !== undefined) { meta.descricao = descricao.trim(); }
+        if (tipo !== undefined) { meta.tipo = tipo; }
+        if (requisito !== undefined) { meta.requisito = requisito; }
+        if (recompensa !== undefined) { meta.recompensa = recompensa; }
+        if (requerAprovacao !== undefined) { meta.requerAprovacao = !!requerAprovacao; }
+        if (maxConclusoes !== undefined) { meta.maxConclusoes = maxConclusoes; }
+        if (periodoValidade !== undefined) { meta.periodoValidade = periodoValidade; }
+        if (dataInicio !== undefined) { meta.dataInicio = dataInicio ? new Date(dataInicio) : new Date(); }
+        if (dataFim !== undefined) { meta.dataFim = dataFim ? new Date(dataFim) : null; }
+        if (evidenciaObrigatoria !== undefined) { meta.evidenciaObrigatoria = !!evidenciaObrigatoria; }
+        if (tipoEvidencia !== undefined) { meta.tipoEvidencia = tipoEvidencia; }
+        if (descricaoEvidencia !== undefined) { meta.descricaoEvidencia = descricaoEvidencia; }
 
         await meta.save();
 

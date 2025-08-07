@@ -80,6 +80,12 @@ router.put('/perfil', verificarToken, upload.single('fotoPerfil'), async (req, r
       user.fotoPerfilBin = resizedBuffer;
       // Atualizar campo fotoPerfil para endpoint
       user.fotoPerfil = `/api/user/foto/${user._id}`;
+      
+      // Atualizar estatísticas para conquistas
+      await user.atualizarEstatisticas('foto_perfil');
+      
+      // Verificar conquistas automaticamente
+      await user.verificarConquistas();
     }
 
     await user.save();

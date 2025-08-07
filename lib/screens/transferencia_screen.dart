@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../services/transaction_service.dart';
 import '../models/transaction_model.dart';
 import 'package:uuid/uuid.dart';
@@ -180,7 +181,9 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: _transacaoRealizada == null
-            ? Form(
+            ? (_qrData != null 
+                ? _buildQrCodeView() 
+                : Form(
                 key: _formKey,
                 child: SingleChildScrollView(
                   child: Column(
@@ -236,7 +239,15 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: SizedBox.shrink(), // Removido botão de QR Code
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.qr_code),
+                              label: const Text('Gerar QR'),
+                              onPressed: _gerarQrCode,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -251,7 +262,7 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
                     ],
                   ),
                 ),
-              )
+              ))
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -271,6 +282,112 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
                 ],
               ),
       ),
+    );
+  }
+
+  Widget _buildQrCodeView() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'QR Code de Transferência',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Mostre este QR Code para o destinatário',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+                             BoxShadow(
+                 color: Colors.grey.withValues(alpha: 0.2),
+                 spreadRadius: 2,
+                 blurRadius: 8,
+                 offset: const Offset(0, 4),
+               ),
+            ],
+          ),
+                     child: QrImageView(
+             data: _qrData!,
+             version: QrVersions.auto,
+             size: 250.0,
+             backgroundColor: Colors.white,
+           ),
+        ),
+        const SizedBox(height: 32),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Destinatário: ${_matriculaController.text}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Valor: ${_valorController.text} IFC Coins',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              if (_descricaoController.text.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Descrição: ${_descricaoController.text}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () {
+                  setState(() {
+                    _qrData = null;
+                  });
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: Colors.blue),
+                ),
+                child: const Text(
+                  'Voltar',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _enviar,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Enviar Direto',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 } 

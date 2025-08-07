@@ -7,7 +7,6 @@ const router = express.Router();
 
 // Função para gerar token JWT
 const gerarToken = (userId, role) => {
-    // Adiciona o campo role explicitamente no payload para facilitar debug e controle de acesso
     return jwt.sign(
         { userId, role },
         process.env.JWT_SECRET,
@@ -54,8 +53,6 @@ router.post('/login', async (req, res) => {
                     message: 'Sua solicitação de cadastro foi recusada. Entre em contato com o administrador.'
                 });
             } else if (user.statusAprovacao === 'aprovado') {
-                // Verificar se é a primeira vez que o usuário faz login após ser aprovado
-                // A notificação deve aparecer apenas se o usuário nunca fez login OU se o último login foi antes da aprovação
                 const showApprovalNotification = !user.ultimoLogin || 
                     (user.ultimoLogin < user.updatedAt && user.updatedAt > user.createdAt);
                 
@@ -79,12 +76,39 @@ router.post('/login', async (req, res) => {
         const senhaValida = await user.compararSenha(senha);
         if (!senhaValida) {
             return res.status(401).json({
-                message: 'Matrícula ou senha incorretos'
+                message: 'Senha incorreta'
             });
         }
 
         // Atualizar último login
         await user.atualizarUltimoLogin();
+        
+        // Atualizar estatísticas de login consecutivo
+        const hoje = new Date();
+        const ultimoLogin = user.estatisticas.ultimoLoginConsecutivo;
+        let diasConsecutivos = user.estatisticas.diasConsecutivos || 0;
+        
+        if (ultimoLogin) {
+            const diffTime = hoje.getTime() - ultimoLogin.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                // Login consecutivo
+                diasConsecutivos++;
+            } else if (diffDays > 1) {
+                // Quebrou a sequência
+                diasConsecutivos = 1;
+            }
+            // Se diffDays === 0, é o mesmo dia, não altera
+        } else {
+            // Primeiro login
+            diasConsecutivos = 1;
+        }
+        
+        await user.atualizarEstatisticas('login_consecutivo', diasConsecutivos);
+        
+        // Verificar conquistas automaticamente
+        await user.verificarConquistas();
 
         // Gerar token JWT
         const token = gerarToken(user._id, user.role);
@@ -118,14 +142,6 @@ router.post('/registro', async (req, res) => {
             turmas = []
         } = req.body;
 
-        console.log('Tentativa de registro:', {
-            nome,
-            email,
-            matricula,
-            role,
-            curso
-        });
-
         // Validação dos campos obrigatórios
         if (!nome || !email || !senha || !matricula) {
             console.log('Campos obrigatórios faltando');
@@ -149,8 +165,8 @@ router.post('/registro', async (req, res) => {
         if (matriculaExistente && emailExistente && String(matriculaExistente._id) !== String(emailExistente._id)) {
             return res.status(400).json({ message: 'Já existe um usuário com este e-mail e outro com esta matrícula. Use dados diferentes.' });
         }
-        // Se matrícula existe e é professor recusado
-        if (matriculaExistente && matriculaExistente.role === 'professor' && matriculaExistente.statusAprovacao === 'recusado') {
+        // Se matrícula existe e é professor
+        if (matriculaExistente && matriculaExistente.role === 'professor') {
             // Verificar se o novo email está em uso por outro usuário
             const outroEmail = await User.findOne({ email: email.toLowerCase().trim(), _id: { $ne: matriculaExistente._id } });
             if (outroEmail) {
@@ -164,7 +180,6 @@ router.post('/registro', async (req, res) => {
             matriculaExistente.turmas = Array.isArray(turmas) ? turmas : [];
             matriculaExistente.matricula = matricula.trim();
             await matriculaExistente.save();
-            console.log('Professor recusado reenviou solicitação (matrícula), cadastro atualizado:', matriculaExistente._id);
             return res.status(201).json({
                 message: 'Cadastro realizado com sucesso! Aguarde a aprovação de um administrador para fazer login.',
                 user: matriculaExistente.toPublicJSON()
@@ -190,12 +205,14 @@ router.post('/registro', async (req, res) => {
                 user: emailExistente.toPublicJSON()
             });
         }
+        
         // Bloquear se matrícula já existe
         if (matriculaExistente) {
             return res.status(400).json({
                 message: 'Matrícula já cadastrada'
             });
         }
+
         // Bloquear se email já existe
         if (emailExistente) {
             return res.status(400).json({

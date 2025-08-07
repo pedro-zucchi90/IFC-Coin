@@ -89,9 +89,9 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Conquistas',
-          style: TextStyle(
+        title: Text(
+          'Conquistas (${_conquistas.length})',
+          style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
             fontSize: 24,
@@ -134,9 +134,28 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                    DropdownMenuItem(value: 'medalha', child: Text('Medalha')),
-                    DropdownMenuItem(value: 'conquista', child: Text('Conquista')),
-                    DropdownMenuItem(value: 'titulo', child: Text('Título')),
+                    DropdownMenuItem(value: 'primeira_transferencia', child: Text('Primeira Transferência')),
+                    DropdownMenuItem(value: 'transferencias_10', child: Text('10 Transferências')),
+                    DropdownMenuItem(value: 'transferencias_50', child: Text('50 Transferências')),
+                    DropdownMenuItem(value: 'transferencias_100', child: Text('100 Transferências')),
+                    DropdownMenuItem(value: 'primeira_recebida', child: Text('Primeira Recebida')),
+                    DropdownMenuItem(value: 'recebidas_10', child: Text('10 Recebidas')),
+                    DropdownMenuItem(value: 'recebidas_50', child: Text('50 Recebidas')),
+                    DropdownMenuItem(value: 'recebidas_100', child: Text('100 Recebidas')),
+                    DropdownMenuItem(value: 'primeira_meta', child: Text('Primeira Meta')),
+                    DropdownMenuItem(value: 'metas_10', child: Text('10 Metas')),
+                    DropdownMenuItem(value: 'metas_50', child: Text('50 Metas')),
+                    DropdownMenuItem(value: 'metas_100', child: Text('100 Metas')),
+                    DropdownMenuItem(value: 'coins_100', child: Text('100 Coins')),
+                    DropdownMenuItem(value: 'coins_500', child: Text('500 Coins')),
+                    DropdownMenuItem(value: 'coins_1000', child: Text('1000 Coins')),
+                    DropdownMenuItem(value: 'coins_5000', child: Text('5000 Coins')),
+                    DropdownMenuItem(value: 'login_consecutivo_7', child: Text('7 Dias Consecutivos')),
+                    DropdownMenuItem(value: 'login_consecutivo_30', child: Text('30 Dias Consecutivos')),
+                    DropdownMenuItem(value: 'login_consecutivo_100', child: Text('100 Dias Consecutivos')),
+                    DropdownMenuItem(value: 'foto_perfil', child: Text('Foto de Perfil')),
+                    DropdownMenuItem(value: 'equilibrado', child: Text('Equilibrado')),
+                    DropdownMenuItem(value: 'social', child: Text('Social')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -214,11 +233,26 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                                       Row(
                                         children: [
                                           // Ícone da conquista
-                                          if (conquista.icone != null)
-                                            Text(
-                                              conquista.icone!,
-                                              style: const TextStyle(fontSize: 32),
+                                          Container(
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color: _getCategoriaColor(conquista.categoria ?? conquista.tipo).withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(25),
                                             ),
+                                            child: Center(
+                                              child: conquista.icone != null
+                                                  ? Text(
+                                                      conquista.icone!,
+                                                      style: const TextStyle(fontSize: 24),
+                                                    )
+                                                  : Icon(
+                                                      Icons.emoji_events,
+                                                      color: _getCategoriaColor(conquista.categoria ?? conquista.tipo),
+                                                      size: 24,
+                                                    ),
+                                            ),
+                                          ),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Column(
@@ -248,14 +282,14 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
                                               vertical: 4,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: _getTipoColor(conquista.tipo),
+                                              color: _getCategoriaColor(conquista.categoria ?? conquista.tipo),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Text(
-                                              conquista.tipo.toUpperCase(),
+                                              (conquista.categoria ?? conquista.tipo).toUpperCase(),
                                               style: const TextStyle(
                                                 color: Colors.white,
-                                                fontSize: 12,
+                                                fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -313,6 +347,27 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
         return Colors.blue;
       case 'titulo':
         return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getCategoriaColor(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'transferências':
+        return Colors.blue;
+      case 'recebimentos':
+        return Colors.green;
+      case 'metas':
+        return Colors.orange;
+      case 'coins':
+        return Colors.amber;
+      case 'frequência':
+        return Colors.purple;
+      case 'perfil':
+        return Colors.teal;
+      case 'balanço':
+        return Colors.indigo;
       default:
         return Colors.grey;
     }

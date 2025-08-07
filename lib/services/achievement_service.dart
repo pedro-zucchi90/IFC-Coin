@@ -205,4 +205,78 @@ class AchievementService {
       throw Exception('Erro de conexão: $e');
     }
   }
+
+  // Obter conquistas do usuário logado
+  Future<Map<String, dynamic>> getConquistasUsuario() async {
+    try {
+      await _authService.initialize();
+      final token = _authService.token;
+      if (token == null) throw Exception('Usuário não autenticado');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/achievement/usuario/conquistas'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'conquistas': data['conquistas'] ?? [],
+          'estatisticas': data['estatisticas'] ?? {},
+        };
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Erro ao carregar conquistas do usuário');
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+        'conquistas': [],
+        'estatisticas': {},
+      };
+    }
+  }
+
+  // Verificar e adicionar conquistas automaticamente
+  Future<Map<String, dynamic>> verificarConquistas() async {
+    try {
+      await _authService.initialize();
+      final token = _authService.token;
+      if (token == null) throw Exception('Usuário não autenticado');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/achievement/usuario/verificar'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'message': data['message'],
+          'conquistasAdicionadas': data['conquistasAdicionadas'] ?? [],
+          'conquistas': data['conquistas'] ?? [],
+          'estatisticas': data['estatisticas'] ?? {},
+        };
+      } else {
+        throw Exception('Erro ao verificar conquistas');
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': e.toString(),
+        'conquistasAdicionadas': [],
+        'conquistas': [],
+        'estatisticas': {},
+      };
+    }
+  }
 } 
