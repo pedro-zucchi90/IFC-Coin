@@ -34,6 +34,9 @@ app.use(express.static('public'));
 // Servir arquivos estáticos da pasta uploads (ex: fotos de perfil, evidências)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Servir arquivos estáticos do painel administrativo
+app.use('/admin', express.static(path.join(__dirname, '../admin-web')));
+
 console.log('Tentando conectar ao MongoDB...');
 // Conecta ao banco de dados MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -62,6 +65,16 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Rota para o painel administrativo
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../admin-web/index.html'));
+});
+
+// Rota raiz - redireciona para o painel administrativo
+app.get('/', (req, res) => {
+  res.redirect('/admin');
+});
+
 // Middleware de tratamento de erros gerais
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -80,4 +93,6 @@ app.use('*', (req, res) => {
 app.listen(3000, '0.0.0.0', () => {
   console.log('Servidor rodando na porta 3000');
   console.log('API disponível em: http://100.101.37.62:3000/api');
+  console.log('Painel Administrativo disponível em: http://100.101.37.62:3000/admin');
+  console.log('URL raiz redireciona para: http://100.101.37.62:3000/');
 }); 

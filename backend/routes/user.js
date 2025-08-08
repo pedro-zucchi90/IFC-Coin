@@ -248,7 +248,7 @@ router.post('/remover-coins', verificarAdmin, async (req, res) => {
 });
 
 // GET /api/user/listar - Listar usuários (apenas admin)
-router.get('/listar', verificarAdmin, async (req, res) => {
+router.get('/listar', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const { role, curso, ativo, page = 1, limit = 10 } = req.query;
 
@@ -288,7 +288,7 @@ router.get('/listar', verificarAdmin, async (req, res) => {
 });
 
 // GET /api/user/:id - Obter usuário específico (apenas admin)
-router.get('/:id', verificarAdmin, async (req, res) => {
+router.get('/:id', verificarToken, verificarAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-senha');
         
