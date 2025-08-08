@@ -32,8 +32,20 @@ class _FAQScreenState extends State<FAQScreen> {
       answer: 'Não. As IFC Coins são exclusivas para uso dentro da instituição e não possuem valor monetário real.',
     ),
     _FAQItem(
-      question: 'Posso matar quem eu quiser?',
-      answer: 'Não',
+      question: 'Como faço uma transferência de IFC Coin para outra pessoa?',
+      answer: 'Na tela inicial, clique em "Transferir" e preencha os dados do destinatário e o valor desejado. Confirme a operação para concluir a transferência.',
+    ),
+    _FAQItem(
+      question: 'Como posso receber IFC Coin de outra pessoa?',
+      answer: 'Você pode gerar um QR Code na opção "Receber" e pedir para a pessoa que vai transferir escanear esse código pelo aplicativo.',
+    ),
+    _FAQItem(
+      question: 'Quem pode participar do sistema IFC Coin?',
+      answer: 'Alunos e professores da instituição podem participar, conforme as regras e permissões definidas pela administração.',
+    ),
+    _FAQItem(
+      question: 'O que devo fazer se encontrar um problema ou erro no aplicativo?',
+      answer: 'Entre em contato com o suporte da instituição ou procure um responsável para relatar o problema. Sua colaboração é importante para melhorarmos o sistema.',
     ),
   ];
 

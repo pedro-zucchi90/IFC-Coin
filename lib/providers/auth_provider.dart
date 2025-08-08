@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../models/user_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -42,35 +43,45 @@ class AuthProvider extends ChangeNotifier {
 
   // Login
   Future<Map<String, dynamic>> login(String matricula, String senha) async {
-    _setLoading(true);
-    _error = null;
-    
-    try {
-      final response = await _authService.login(matricula, senha);
-      _user = response.user;
-      
-      notifyListeners();
-      return {
-        'success': true,
-        'showApprovalNotification': response.showApprovalNotification,
-      };
-    } catch (e) {
-      String msg = e.toString().toLowerCase();
-      if (msg.contains('matrícula') || msg.contains('senha') || msg.contains('incorret')) {
-        _error = 'Matrícula ou senha incorretos';
-      } else {
-        _error = e.toString(); // Mostra o erro detalhado do backend
-      }
-      notifyListeners();
-      return {
-        'success': false,
-        'showApprovalNotification': false,
-      };
-    } finally {
-      _setLoading(false);
-      notifyListeners(); // Garante atualização mesmo em erro
+  _setLoading(true);
+  _error = null;
+  
+  try {
+    final response = await _authService.login(matricula, senha);
+    _user = response.user;
+
+    // 🔹 Verifica se já mostramos a notificação para esse professor
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'notificacao_aprovacao_${_user?.matricula ?? matricula}';
+    bool showApproval = response.showApprovalNotification && prefs.getBool(key) != true;
+
+    // Se for pra mostrar agora, grava como já mostrado
+    if (showApproval) {
+      await prefs.setBool(key, true);
     }
+
+    notifyListeners();
+    return {
+      'success': true,
+      'showApprovalNotification': showApproval,
+    };
+  } catch (e) {
+    String msg = e.toString().toLowerCase();
+    if (msg.contains('matrícula') || msg.contains('senha') || msg.contains('incorret')) {
+      _error = 'Matrícula ou senha incorretos';
+    } else {
+      _error = e.toString();
+    }
+    notifyListeners();
+    return {
+      'success': false,
+      'showApprovalNotification': false,
+    };
+  } finally {
+    _setLoading(false);
+    notifyListeners();
   }
+}
 
   // Registro
   Future<bool> registrar({
