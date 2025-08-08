@@ -7,7 +7,6 @@ import 'faq.dart';
 import 'tela_login.dart';
 import 'metas_screen.dart';
 import 'admin_metas_screen.dart';
-import 'admin_conquistas_screen.dart';
 import 'admin_solicitacoes_professores_screen.dart';
 import 'perfil_screen.dart';
 import '../widgets/user_avatar.dart';
@@ -121,15 +120,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     try {
       await context.read<AuthProvider>().updateUserData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Saldo atualizado!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -425,20 +415,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const AdminSolicitacoesProfessoresScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      _HomeCard(
-                        icon: Icons.emoji_events,
-                        iconColor: Color(0xFF9C27B0),
-                        title: 'Gerenciar\nConquistas',
-                        textColor: Color(0xFF9C27B0),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AdminConquistasScreen(),
                             ),
                           );
                         },
