@@ -19,8 +19,8 @@ async function createAdmin() {
         const admin = new User({
             nome: 'Administrador IFC Coin',
             email: 'admin@ifc.edu.br',
-            matricula: 'ADMIN001',
-            senha: 'admin123456',
+            matricula: '1234002',
+            senha: 'admin12',
             role: 'admin',
             ativo: true,
             statusAprovacao: 'aprovado',
@@ -31,8 +31,8 @@ async function createAdmin() {
         await admin.save();
         console.log('✅ Administrador criado com sucesso!');
         console.log('\nCredenciais do administrador:');
-        console.log('Matrícula: ADMIN001');
-        console.log('Senha: admin123456');
+        console.log('Matrícula: 1234002');
+        console.log('Senha: admin12');
         console.log('\nEste usuário pode ser usado para gerenciar o sistema via API.');
 
     } catch (error) {
