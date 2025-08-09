@@ -45,6 +45,7 @@ ios/Runner/GoogleService-Info.plist
 
 # uploads
 backend/uploads/*
+backend/node_modules/*
 
 # Environment files
 backend/.env
