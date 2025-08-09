@@ -7,8 +7,9 @@ WORKDIR /app
 # Copia package.json e package-lock.json (se houver) para instalar dependências
 COPY package*.json ./
 
-# Instala as dependências
-RUN npm install
+# Limpa o cache do npm e instala as dependências
+RUN npm cache clean --force && \
+    npm install
 
 # Copia todo o código da aplicação para dentro do container
 COPY . .
@@ -16,5 +17,9 @@ COPY . .
 # Expõe a porta que seu app vai usar
 EXPOSE 3000
 
-# Comando para iniciar sua aplicação
-CMD ["npm", "start"]
+# Copia e configura o script de entrada
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Define o script de entrada como comando principal
+CMD ["docker-entrypoint.sh"]

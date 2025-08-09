@@ -2,23 +2,40 @@ services:
   mongo:
     image: mongo:latest
     container_name: ifccoin_mongo
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    networks:
+      - ifccoin-network
 
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ifccoin_backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
       - ./.env
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/ifccoin
+      - NODE_ENV=production
     depends_on:
       - mongo
     volumes:
       - .:/app
       - /app/node_modules
+      - ../admin-web:/admin-web
+    networks:
+      - ifccoin-network
+
+networks:
+  ifccoin-network:
+    driver: bridge
 
 volumes:
   mongo-data:
+    driver: local

@@ -1,5 +1,5 @@
 // Configuração da API
-const API_BASE_URL = 'http://100.101.37.62:3000/api';
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
 
 // Configurações globais
 const CONFIG = {
