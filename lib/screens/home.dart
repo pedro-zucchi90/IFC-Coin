@@ -319,7 +319,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Consumer<AuthProvider>(
                 builder: (context, authProvider, child) {
                   final isAdmin = authProvider.isAdmin;
-                  final isProfessor = authProvider.isProfessor;
                   
                   List<Widget> cards = [
                     _HomeCard(
@@ -436,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               const SizedBox(height: 55),
               const Text(
                 'IFC Coin: Sua moeda digital\npor horas de dedicação na instituição.',
-                style: TextStyle(fontSize: 20, color: Colors.black54),
+                style: TextStyle(fontSize: 14, color: Colors.black54),
                 textAlign: TextAlign.center,
               ),
             ],

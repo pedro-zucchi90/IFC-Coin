@@ -16,10 +16,6 @@ class _FAQScreenState extends State<FAQScreen> {
       answer: 'IFC Coin é uma moeda digital utilizada dentro da instituição para recompensar alunos e professores por participação em atividades e projetos.',
     ),
     _FAQItem(
-      question: 'Como posso ganhar IFC Coin?',
-      answer: 'Na tela inicial do aplicativo, clique no botão "Como Ganhar Coins" para descobrir as diversas formas de acumular moedas participando de atividades e projetos da instituição.',
-    ),
-    _FAQItem(
       question: 'Como vejo meu histórico de transações?',
       answer: 'Na tela inicial do aplicativo, clique no botão "Histórico de Transações" para ver um registro detalhado de todas as suas moedas recebidas e enviadas, incluindo datas e remetentes/destinatários.',
     ),
@@ -33,11 +29,11 @@ class _FAQScreenState extends State<FAQScreen> {
     ),
     _FAQItem(
       question: 'Como faço uma transferência de IFC Coin para outra pessoa?',
-      answer: 'Na tela inicial, clique em "Transferir" e preencha os dados do destinatário e o valor desejado. Confirme a operação para concluir a transferência.',
+      answer: 'Clique em no ícone de QR Code no canto superior direito e escaneie o código do destinatário para transferir a quantidade desejada. Confirme a operação para concluir a transferência.',
     ),
     _FAQItem(
       question: 'Como posso receber IFC Coin de outra pessoa?',
-      answer: 'Você pode gerar um QR Code na opção "Receber" e pedir para a pessoa que vai transferir escanear esse código pelo aplicativo.',
+      answer: 'Você pode gerar um QR Code na opção "Gerar QR Code" e pedir para a pessoa que vai transferir escanear esse código pelo aplicativo.',
     ),
     _FAQItem(
       question: 'Quem pode participar do sistema IFC Coin?',
@@ -146,7 +142,7 @@ class _FAQScreenState extends State<FAQScreen> {
                                   style: TextStyle(
                                     color: isOpen ? const Color(0xFF2196F3) : const Color(0xFF2196F3),
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 24,
+                                    fontSize: 20,
                                   ),
                                 ),
                               ),
@@ -162,7 +158,7 @@ class _FAQScreenState extends State<FAQScreen> {
                               item.answer,
                               style: const TextStyle(
                                 color: Colors.black87,
-                                fontSize: 20,
+                                fontSize: 16,
                               ),
                             ),
                           ]

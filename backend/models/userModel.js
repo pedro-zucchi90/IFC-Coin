@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema({
     },
     curso: { 
         type: String, 
-        enum: ['Engenharia de Alimentos', 'Agropecuária', 'Informática para Internet'],
+        enum: ['Técnico em Alimentos', 'Agropecuária', 'Informática para Internet'],
         required: function() {
             // Curso é obrigatório apenas para alunos
             return this.role === 'aluno';

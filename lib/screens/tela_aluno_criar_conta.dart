@@ -163,7 +163,7 @@ class _TelaAlunoCriarContaState extends State<TelaAlunoCriarConta> {
                         ),
                         items: const [
                           DropdownMenuItem(value: 'Informática para Internet', child: Text('Informática para Internet')),
-                          DropdownMenuItem(value: 'Engenharia de Alimentos', child: Text('Engenharia de Alimentos')),
+                          DropdownMenuItem(value: 'Técnico em Alimentos', child: Text('Técnico em Alimentos')),
                           DropdownMenuItem(value: 'Agropecuária', child: Text('Agropecuária')),
                         ],
                         onChanged: (value) {

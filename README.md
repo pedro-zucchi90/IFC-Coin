@@ -82,30 +82,44 @@ cd IFC-Coin-testes
 git checkout main
 ```
 
-### 2. Configuração do Backend
+## 2. Configuração do Backend (Banco de Dados Local)
+
+### 2.1 Acessando o Diretório do Backend
+
+Primeiro, você precisa acessar o diretório onde o backend está localizado. Execute o seguinte comando no terminal:
 
 ```bash
 # Entre no diretório do backend
 cd backend
+```
 
+### 2.2 Instalando Dependências
+
+Após acessar o diretório do backend, instale as dependências necessárias para o funcionamento do projeto. Utilize o comando abaixo:
+
+```bash
 # Instale as dependências
 npm install
+```
 
+### 2.3 Configurando Variáveis de Ambiente
+
+Para que o backend funcione corretamente, você precisará configurar as variáveis de ambiente. Para isso, copie o arquivo de exemplo de variáveis de ambiente e renomeie-o para `.env`:
+
+```bash
 # Copie o arquivo de exemplo de variáveis de ambiente
 cp env.example .env
 ```
 
-#### 2.1 Configuração do Arquivo .env
-
-Edite o arquivo `backend/.env` com suas configurações:
+Agora, edite o arquivo `backend/.env` com suas configurações específicas. Aqui está um exemplo de como deve ser a configuração:
 
 ```env
 # Configurações do Servidor
 PORT=3000
 NODE_ENV=development
 
-# Configurações do MongoDB
-MONGODB_URI=mongodb://localhost:27017/ifc_coin_db
+# Configurações do MongoDB (Local)
+MONGODB_URI=mongodb://127.0.0.1:27017/ifc_coin_db
 
 # Configurações JWT
 JWT_SECRET=sua_chave_secreta_muito_segura_aqui_2024
@@ -126,15 +140,34 @@ EMAIL=seuemail@gmail.com
 SENHA_EMAIL=suasenha
 ```
 
-#### 2.2 Configuração do MongoDB
+### 2.4 Iniciando o MongoDB Local
+
+Para que o backend funcione, o MongoDB deve estar em execução. Você pode iniciar o MongoDB usando o comando `mongod`, que é o servidor do MongoDB. Dependendo do seu sistema operacional, use um dos seguintes métodos:
+
+#### 2.4.1 Iniciando o Servidor MongoDB
 
 ```bash
-# Inicie o MongoDB (Windows)
-# Certifique-se de que o MongoDB está instalado e rodando
-# Ou use MongoDB Atlas para uma instância na nuvem
-
-# Para desenvolvimento local, o MongoDB deve estar rodando na porta 27017
+# Inicie o servidor MongoDB
+mongod --dbpath /caminho/para/seu/diretorio/de/dados
 ```
+
+**Nota:** Substitua `/caminho/para/seu/diretorio/de/dados` pelo caminho onde você deseja armazenar os dados do MongoDB. Se você não especificar um `--dbpath`, o MongoDB usará o diretório padrão.
+
+#### 2.4.2 Acessando o Shell do MongoDB
+
+Após iniciar o servidor, você pode acessar o shell interativo do MongoDB usando o comando `mongosh`:
+
+```bash
+# Acesse o shell do MongoDB
+mongosh
+```
+
+No shell, você pode executar comandos para interagir com o banco de dados. Por exemplo, para verificar se o banco de dados está funcionando corretamente, você pode usar:
+
+```javascript
+// Verifique se o MongoDB está rodando
+db.stats()
+``` 
 
 ### 3. Configuração do Frontend
 
@@ -161,7 +194,7 @@ const String baseUrl = 'http://localhost:3000/api';
 const String baseUrl = 'http://10.0.2.2:3000/api';
 
 // Para desenvolvimento com dispositivo físico
-const String baseUrl = 'http://SEU_IP_LOCAL:3000/api';
+const String baseUrl = 'http://IP_DA_MAQUINA:3000/api';
 ```
 
 ---
