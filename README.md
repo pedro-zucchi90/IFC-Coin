@@ -189,12 +189,15 @@ Edite o arquivo `lib/config.dart` com a URL da sua API:
 ```dart
 // Para desenvolvimento local
 const String baseUrl = 'http://localhost:3000/api';
+const String baseUploadsUrl = 'http://localhost:3000';
 
 // Para desenvolvimento com emulador Android
 const String baseUrl = 'http://10.0.2.2:3000/api';
+const String baseUploadsUrl = 'http://10.0.2.2:3000';
 
 // Para desenvolvimento com dispositivo físico
 const String baseUrl = 'http://IP_DA_MAQUINA:3000/api';
+const String baseUploadsUrl = 'http://IP_DA_MAQUINA:3000';
 ```
 
 ---

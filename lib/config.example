@@ -1,1 +1,2 @@
 const String baseUrl = 'endereço_da_sua_api'; 
+const String baseUploadsUrl = 'endereço_da_sua_api';
