@@ -82,22 +82,38 @@ cd IFC-Coin-testes
 git checkout main
 ```
 
-## 2. Configuração do Backend (Banco de Dados Local)
+## 2. Configuração do Backend
 
-### 2.1 Acessando o Diretório do Backend
+### 2.1 Usando Docker (Recomendado)
 
-Primeiro, você precisa acessar o diretório onde o backend está localizado. Execute o seguinte comando no terminal:
+O projeto inclui configuração Docker para facilitar a implantação. Para usar o Docker:
 
 ```bash
 # Entre no diretório do backend
 cd backend
+
+# Copie o arquivo de exemplo de variáveis de ambiente
+cp env.example .env
+
+# Inicie os containers
+docker compose up -d --build
 ```
 
-### 2.2 Instalando Dependências
+O Docker irá:
+1. Criar um container para o MongoDB
+2. Criar um container para o backend Node.js
+3. Criar automaticamente o usuário administrador
+4. Criar automaticamente as conquistas padrão
+5. Iniciar o servidor na porta 3000
 
-Após acessar o diretório do backend, instale as dependências necessárias para o funcionamento do projeto. Utilize o comando abaixo:
+### 2.2 Instalação Local (Alternativa)
+
+Se preferir não usar Docker, você pode instalar localmente:
 
 ```bash
+# Entre no diretório do backend
+cd backend
+
 # Instale as dependências
 npm install
 ```
@@ -238,7 +254,13 @@ flutter run -d android # Android
 
 ## Scripts de Seed e Configuração Inicial
 
-### 1. Criar Administrador Padrão
+### 1. Usando Docker (Automático)
+
+Se você estiver usando Docker, o administrador padrão e as conquistas são criados automaticamente na inicialização do container.
+
+### 2. Instalação Local (Manual)
+
+Se você estiver usando a instalação local, execute os scripts manualmente:
 
 ```bash
 # Entre no diretório do backend
@@ -246,11 +268,7 @@ cd backend
 
 # Execute o script para criar o admin
 node scripts/create_admin.js
-```
 
-### 2. Criar Conquistas Padrão
-
-```bash
 # Execute o script para criar conquistas padrão
 node scripts/criar_conquistas_padrao.js
 ```
@@ -365,7 +383,25 @@ O aplicativo suporta notificações locais para:
 
 ### Problemas Comuns
 
-#### Backend não inicia
+#### Docker não inicia
+```bash
+# Verifique se o Docker está rodando
+docker --version
+
+# Verifique os logs do container
+docker logs ifccoin_backend
+
+# Reinicie os containers
+docker-compose down
+docker-compose up -d
+
+# Se o problema persistir, reconstrua as imagens
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+#### Backend não inicia (Instalação Local)
 ```bash
 # Verifique se o MongoDB está rodando
 # Verifique se o arquivo .env está configurado
@@ -1615,6 +1651,9 @@ backend/
 ├── env.example
 ├── package.json
 ├── package-lock.json
+├── Dockerfile
+├── docker-compose.yml
+├── docker-entrypoint.sh
 ├── scripts/
 │   ├── create_admin.js
 │   ├── criar_conquistas_padrao.js
