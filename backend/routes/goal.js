@@ -203,7 +203,6 @@ router.post('/', verificarToken, verificarAdmin, async (req, res) => {
             titulo: titulo.trim(),
             descricao: descricao.trim(),
             tipo,
-            requisito,
             recompensa,
             usuariosConcluidos: [],
             requerAprovacao: !!requerAprovacao,
@@ -254,7 +253,6 @@ router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
             titulo: titulo.trim(),
             descricao: descricao.trim(),
             tipo,
-            requisito,
             recompensa,
             usuariosConcluidos: [],
             requerAprovacao: !!requerAprovacao

@@ -344,7 +344,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                       titulo: tituloController.text,
                       descricao: descricaoController.text,
                       tipo: tipoSelecionado,
-                      requisito: int.parse(requisitoController.text),
                       recompensa: int.parse(recompensaController.text),
                       requerAprovacao: requerAprovacaoEdit,
                     );

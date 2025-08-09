@@ -147,7 +147,6 @@ class GoalService {
     required String titulo,
     required String descricao,
     required String tipo,
-    required int requisito,
     required int recompensa,
     bool requerAprovacao = false,
   }) async {
@@ -166,7 +165,6 @@ class GoalService {
           'titulo': titulo,
           'descricao': descricao,
           'tipo': tipo,
-          'requisito': requisito,
           'recompensa': recompensa,
           'requerAprovacao': requerAprovacao,
         }),

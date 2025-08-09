@@ -92,10 +92,6 @@ class Goals {
                             <p class="text-gray-600 mt-1">${goal.descricao}</p>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
                                 <div>
-                                    <p class="text-gray-500">Requisito</p>
-                                    <p class="font-semibold">${goal.requisito}</p>
-                                </div>
-                                <div>
                                     <p class="text-gray-500">Recompensa</p>
                                     <p class="font-semibold">${Utils.formatCurrency(goal.recompensa)}</p>
                                 </div>
@@ -213,7 +209,6 @@ class Goals {
             titulo: formData.get('titulo'),
             descricao: formData.get('descricao'),
             tipo: formData.get('tipo'),
-            requisito: parseInt(formData.get('requisito')),
             recompensa: parseInt(formData.get('recompensa')),
             requerAprovacao: formData.get('requerAprovacao') === 'on',
             evidenciaObrigatoria: formData.get('evidenciaObrigatoria') === 'on',

@@ -73,7 +73,7 @@ O **IFC Coin** é um sistema de gamificação para instituições de ensino, com
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/IFC-Coin-testes.git
+git clone https://github.com/seu-usuario/IFC-Coin.git
 
 # Entre no diretório do projeto
 cd IFC-Coin-testes
@@ -135,7 +135,7 @@ RATE_LIMIT_MAX_REQUESTS=100
 # Configurações CORS
 CORS_ORIGIN=http://localhost:3000,http://localhost:8080,http://localhost:8000
 
-# Configurações de Email (opcional)
+# Configurações de Email (opcional; futuramente usado para envio de redefinição de senhas)
 EMAIL=seuemail@gmail.com
 SENHA_EMAIL=suasenha
 ```
@@ -172,7 +172,7 @@ db.stats()
 ### 3. Configuração do Frontend
 
 ```bash
-# Volte para o diretório raiz
+# Em outro terminal, volte para o diretório raiz 
 cd ..
 
 # Instale as dependências do Flutter
@@ -296,22 +296,19 @@ node scripts/update_users_status.js
 - Todas as funcionalidades do aluno
 - Criar metas para os alunos
 - Aprovar conclusões de metas
-- Gerenciar suas turmas
 - Necessita aprovação do administrador
 
 #### Administrador
 - Todas as funcionalidades do professor
 - Aprovar solicitações de professores
-- Gerenciar conquistas do sistema
-- Aprovar transferências (se configurado)
+- Aprovar transferências
 - Visualizar estatísticas gerais
 
 ### Sistema de Metas
 
-1. **Criação de Metas**: Professores podem criar metas com:
+1. **Criação de Metas**: Professores e administradores podem criar metas com:
    - Título e descrição
    - Recompensa em IFC Coins
-   - Data de expiração
    - Requisito de evidência (foto/documento/texto)
    - Categoria e dificuldade
 
@@ -321,7 +318,7 @@ node scripts/update_users_status.js
    - Solicitar participação
    - Enviar evidências de conclusão
 
-3. **Aprovação**: Professores aprovam ou rejeitam conclusões
+3. **Aprovação**: Professores e administradores aprovam ou rejeitam conclusões
 
 ### Sistema de Conquistas
 
