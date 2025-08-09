@@ -10,38 +10,6 @@ const { verificarToken, verificarAdmin, verificarProfessor } = require('../middl
 
 const router = express.Router();
 
-// Configuração do multer para upload de evidências de metas
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/evidencias';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    // Gera nome único para o arquivo
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'evidencia-' + req.user._id + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // Limite de 10MB
-  },
-  fileFilter: function (req, file, cb) {
-    // Permite apenas tipos específicos de arquivos
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Tipo de arquivo não permitido'), false);
-    }
-  }
-});
-
 // GET /api/goal - Listar todas as metas (admin) ou metas disponíveis (usuário)
 router.get('/', verificarToken, async (req, res) => {
     try {
@@ -307,42 +275,68 @@ router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
     }
 });
 
+const uploadDir = path.join(__dirname, '..', 'uploads');
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+// Configuração do multer com filtro de imagens
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/'); // pasta de destino
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+    
+        const tiposPermitidos = /\.(jpeg|jpg|png|gif)$/i; // só extensão
+    
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else if (file.mimetype === 'application/octet-stream' && tiposPermitidos.test(file.originalname)) {
+            // Aceita o arquivo mesmo com mimetype genérico, se a extensão for correta
+            cb(null, true);
+        } else {
+            cb(new Error('Apenas imagens (jpeg, jpg, png, gif) são permitidas!'));
+        }
+    }
+});
+
 // POST /api/goal/concluir/:id - Solicitar conclusão de meta (usuário)
+// Sua rota adaptada
 router.post('/concluir/:id', verificarToken, upload.single('evidenciaArquivo'), async (req, res) => {
     try {
         const meta = await Goal.findById(req.params.id);
 
         if (!meta) {
-            return res.status(404).json({
-                message: 'Meta não encontrada'
-            });
+            return res.status(404).json({ message: 'Meta não encontrada' });
         }
 
-        // Verifica se a meta está ativa
         if (!meta.ativo) {
-            return res.status(400).json({
-                message: 'Meta não está mais ativa'
-            });
+            return res.status(400).json({ message: 'Meta não está mais ativa' });
         }
 
-        // Verifica se o usuário já concluiu
         if (meta.usuariosConcluidos.includes(req.user._id)) {
-            return res.status(400).json({
-                message: 'Meta já foi concluída'
-            });
+            return res.status(400).json({ message: 'Meta já foi concluída' });
         }
 
-        // Se requer aprovação, criar GoalRequest pendente
         if (meta.requerAprovacao) {
-            // Verifica se já existe solicitação pendente para essa meta e usuário
             const jaSolicitada = await GoalRequest.findOne({ goal: meta._id, aluno: req.user._id, status: 'pendente' });
             if (jaSolicitada) {
                 return res.status(400).json({ message: 'Já existe uma solicitação pendente para essa meta.' });
             }
+
             let evidenciaArquivoPath = undefined;
             if (req.file) {
                 evidenciaArquivoPath = req.file.path;
             }
+
             const goalRequest = new GoalRequest({
                 goal: meta._id,
                 aluno: req.user._id,
@@ -351,36 +345,34 @@ router.post('/concluir/:id', verificarToken, upload.single('evidenciaArquivo'), 
                 evidenciaArquivo: evidenciaArquivoPath,
                 status: 'pendente',
             });
+
             await goalRequest.save();
             return res.status(200).json({ message: 'Solicitação enviada para análise!', goalRequest });
         }
 
-        // Se não requer aprovação, concluir direto
         meta.usuariosConcluidos.push(req.user._id);
         await meta.save();
         await req.user.adicionarCoins(meta.recompensa);
-        
-        // Atualizar estatísticas para conquistas
+
         await req.user.atualizarEstatisticas('meta_concluida');
         await req.user.atualizarEstatisticas('coins_ganhos', meta.recompensa);
-        
-        // Verificar conquistas automaticamente
         await req.user.verificarConquistas();
-        
+
         const Transaction = require('../models/transactionModel');
         const transacao = new Transaction({
             tipo: 'recebido',
-            origem: null, // Sistema
+            origem: null,
             destino: req.user._id,
             quantidade: meta.recompensa,
             descricao: `Recompensa por concluir meta: ${meta.titulo}`,
             hash: `goal_${meta._id}_${req.user._id}_${Date.now()}`
         });
+
         await transacao.save();
         res.status(200).json({ message: 'Meta concluída com sucesso!', recompensaAdicionada: meta.recompensa });
     } catch (error) {
         console.error('Erro ao concluir meta:', error);
-        res.status(500).json({ message: 'Erro interno do servidor' });
+        res.status(500).json({ message: error.message || 'Erro interno do servidor' });
     }
 });
 

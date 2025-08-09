@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/goal_service.dart';
 import '../models/goal_model.dart';
+import '../config.dart';
 
 class AdminAprovarSolicitacoesMetasScreen extends StatefulWidget {
   const AdminAprovarSolicitacoesMetasScreen({super.key});
@@ -20,6 +21,11 @@ class _AdminAprovarSolicitacoesMetasScreenState extends State<AdminAprovarSolici
   void initState() {
     super.initState();
     _carregarSolicitacoes();
+  }
+
+  String cleanPath(String path) {
+    if (path.startsWith('/')) return path.substring(1);
+    return path;
   }
 
   Future<void> _carregarSolicitacoes() async {
@@ -145,11 +151,49 @@ class _AdminAprovarSolicitacoesMetasScreenState extends State<AdminAprovarSolici
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Text('Evidência: ${req.evidenciaTexto}'),
                                   ),
-                                if (req.evidenciaArquivo != null && req.evidenciaArquivo!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Text('Arquivo: ${req.evidenciaArquivo}'),
+                               if (req.evidenciaArquivo != null && req.evidenciaArquivo!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      final imagePath = req.evidenciaArquivo!.replaceAll('\\', '/');
+                                      final imageUrl = '$baseUploadsUrl/${cleanPath(imagePath)}';
+
+                                      print('Abrindo imagem: $imageUrl');
+
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => Dialog(
+                                          child: InteractiveViewer(
+                                            child: Image.network(
+                                              imageUrl,
+                                              fit: BoxFit.contain,
+                                              errorBuilder: (context, error, stackTrace) =>
+                                                  const Text('Erro ao carregar imagem'),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Builder(
+                                      builder: (context) {
+                                        final imagePath = req.evidenciaArquivo!.replaceAll('\\', '/');
+                                        final imageUrl = '$baseUploadsUrl/${cleanPath(imagePath)}';
+
+                                        print('Mostrando miniatura: $imageUrl');
+
+                                        return Image.network(
+                                          imageUrl,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              const Text('Erro ao carregar imagem'),
+                                        );
+                                      },
+                                    ),
                                   ),
+                                ),
+
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Text('Status: ${req.status.toUpperCase()}', style: TextStyle(fontWeight: FontWeight.bold, color: req.status == 'pendente' ? Colors.orange : req.status == 'aprovada' ? Colors.green : Colors.red)),
@@ -161,7 +205,10 @@ class _AdminAprovarSolicitacoesMetasScreenState extends State<AdminAprovarSolici
                                         child: ElevatedButton.icon(
                                           icon: const Icon(Icons.check),
                                           label: const Text('Aprovar'),
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.green,
+                                            foregroundColor: Colors.white, // texto e ícone brancos
+                                          ),
                                           onPressed: () => _aprovarSolicitacao(req),
                                         ),
                                       ),
@@ -170,7 +217,10 @@ class _AdminAprovarSolicitacoesMetasScreenState extends State<AdminAprovarSolici
                                         child: ElevatedButton.icon(
                                           icon: const Icon(Icons.close),
                                           label: const Text('Recusar'),
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white, // texto e ícone brancos
+                                          ),
                                           onPressed: () => _recusarSolicitacao(req),
                                         ),
                                       ),

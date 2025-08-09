@@ -116,7 +116,7 @@ class GoalService {
       if (evidenciaArquivo != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
-            'evidencia',
+            'evidenciaArquivo', // <-- nome do campo corrigido aqui
             evidenciaArquivo.path,
           ),
         );
