@@ -76,7 +76,7 @@ O **IFC Coin** é um sistema de gamificação para instituições de ensino, com
 git clone https://github.com/seu-usuario/IFC-Coin.git
 
 # Entre no diretório do projeto
-cd IFC-Coin-testes
+cd IFC-Coin
 
 # Verifique se está na branch principal
 git checkout main
