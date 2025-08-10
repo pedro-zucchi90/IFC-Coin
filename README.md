@@ -328,7 +328,7 @@ node scripts/update_users_status.js
    - Título e descrição
    - Recompensa em IFC Coins
    - Requisito de evidência (foto/documento/texto)
-   - Categoria e dificuldade
+   - Categoria
 
 2. **Participação**: Alunos podem:
    - Visualizar metas disponíveis
@@ -342,7 +342,6 @@ node scripts/update_users_status.js
 
 - **Conquistas Automáticas**: Atribuídas automaticamente ao atingir marcos
 - **Categorias**: Transferências, Metas, Saldo, Especiais
-- **Notificações**: Alertas quando conquistas são desbloqueadas
 - **Visualização**: Galeria de conquistas no perfil
 
 ### Sistema de Transferências
@@ -350,19 +349,10 @@ node scripts/update_users_status.js
 - **QR Code**: Geração e leitura de códigos QR
 - **Transferência Direta**: Por matrícula ou email
 - **Histórico**: Registro completo de todas as transações
-- **Notificações**: Alertas de transferências recebidas
-
+  
 ---
 
 ## Configurações Avançadas
-
-### Configuração de Notificações
-
-O aplicativo suporta notificações locais para:
-- Conquistas desbloqueadas
-- Metas aprovadas/rejeitadas
-- Transferências recebidas
-- Aprovação de conta de professor
 
 ### Configuração de Upload de Imagens
 
