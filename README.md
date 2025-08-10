@@ -56,6 +56,8 @@ O **IFC Coin** é um sistema de gamificação para instituições de ensino, com
 - **Node.js** (versão 18 ou superior)
 - **MongoDB** (versão 5.0 ou superior)
 - **npm** ou **yarn**
+- **Docker** (opcional, para facilitar a configuração do ambiente)
+- **Docker Compose** (opcional, se utilizar múltiplos containers)
 
 ### Frontend
 - **Flutter SDK** (versão 3.7.0 ou superior)
