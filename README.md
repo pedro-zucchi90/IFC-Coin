@@ -18,6 +18,12 @@ O **IFC Coin** é um sistema de gamificação para instituições de ensino, com
 
 ---
 
+## Por que o app foi feito?
+
+O IFC Coin foi desenvolvido para incentivar a participação ativa dos estudantes e professores em atividades acadêmicas e extracurriculares, promovendo engajamento, colaboração e reconhecimento dentro do ambiente escolar. Ao criar um sistema de recompensas e conquistas, buscamos transformar a rotina escolar em uma experiência mais motivadora, valorizando iniciativas, conquistas e o progresso individual e coletivo. Com isso, o app ajuda a fortalecer o senso de comunidade, a integração entre alunos e professores, e a estimular o desenvolvimento de habilidades pessoais e acadêmicas.
+
+---
+
 ## Funcionalidades Principais
 
 ### Sistema de Usuários
