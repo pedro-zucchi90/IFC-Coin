@@ -3,7 +3,6 @@ class Goal {
   final String titulo;
   final String descricao;
   final String tipo;
-  final int requisito;
   final int recompensa;
   final List<String> usuariosConcluidos;
   final DateTime? createdAt;
@@ -29,7 +28,6 @@ class Goal {
     required this.titulo,
     required this.descricao,
     required this.tipo,
-    required this.requisito,
     required this.recompensa,
     required this.usuariosConcluidos,
     this.createdAt,
@@ -53,7 +51,6 @@ class Goal {
       titulo: json['titulo'],
       descricao: json['descricao'],
       tipo: json['tipo'],
-      requisito: json['requisito'],
       recompensa: json['recompensa'],
       usuariosConcluidos: List<String>.from(json['usuariosConcluidos'] ?? []),
       createdAt: json['createdAt'] != null 
@@ -86,7 +83,6 @@ class Goal {
       'titulo': titulo,
       'descricao': descricao,
       'tipo': tipo,
-      'requisito': requisito,
       'recompensa': recompensa,
       'usuariosConcluidos': usuariosConcluidos,
       'createdAt': createdAt?.toIso8601String(),
@@ -100,7 +96,6 @@ class Goal {
     String? titulo,
     String? descricao,
     String? tipo,
-    int? requisito,
     int? recompensa,
     List<String>? usuariosConcluidos,
     DateTime? createdAt,
@@ -112,7 +107,6 @@ class Goal {
       titulo: titulo ?? this.titulo,
       descricao: descricao ?? this.descricao,
       tipo: tipo ?? this.tipo,
-      requisito: requisito ?? this.requisito,
       recompensa: recompensa ?? this.recompensa,
       usuariosConcluidos: usuariosConcluidos ?? this.usuariosConcluidos,
       createdAt: createdAt ?? this.createdAt,

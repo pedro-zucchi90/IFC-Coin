@@ -91,15 +91,16 @@ router.get('/', verificarToken, async (req, res) => {
     }
 });
 
-// GET /api/goal/listar - Listar metas disponíveis (mantido para compatibilidade)
+// GET /api/goal/listar - Listar metas disponíveis (compatibilidade)
 router.get('/listar', verificarToken, async (req, res) => {
     try {
-        const { tipo, page = 1, limit = 10 } = req.query;
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const { tipo } = req.query;
 
         // Filtros: apenas metas ativas e válidas
         const filtros = { ativo: true };
-        if (tipo) {filtros.tipo = tipo;}
+        if (tipo) {
+            filtros.tipo = tipo;
+        }
 
         // Validade temporal: metas sem data de fim ou com data de fim futura
         const agora = new Date();
@@ -108,38 +109,33 @@ router.get('/listar', verificarToken, async (req, res) => {
             { dataFim: { $gte: agora } }
         ];
 
-        // Busca metas no banco
-        const metas = await Goal.find(filtros)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit));
+        // Busca metas no banco (sem paginação)
+        const metas = await Goal.find(filtros).sort({ createdAt: -1 });
 
         // Marca se o usuário já concluiu cada meta
         const metasComStatus = await Promise.all(metas.map(async (meta) => {
             const usuarioConcluiu = meta.usuariosConcluidos.includes(req.user._id);
             let temSolicitacaoPendente = false;
+
             if (!usuarioConcluiu && meta.requerAprovacao) {
-                const pendente = await GoalRequest.findOne({ goal: meta._id, aluno: req.user._id, status: 'pendente' });
+                const pendente = await GoalRequest.findOne({
+                    goal: meta._id,
+                    aluno: req.user._id,
+                    status: 'pendente'
+                });
                 temSolicitacaoPendente = !!pendente;
             }
+
             return {
                 ...meta.toObject(),
+                _id: meta._id.toString(), // garante que é string
                 usuarioConcluiu,
                 temSolicitacaoPendente
             };
         }));
 
-        const total = await Goal.countDocuments(filtros);
-
-        res.json({
-            metas: metasComStatus,
-            paginacao: {
-                pagina: parseInt(page),
-                limite: parseInt(limit),
-                total,
-                paginas: Math.ceil(total / parseInt(limit))
-            }
-        });
+        // Retorna apenas o array puro
+        res.json(metasComStatus);
 
     } catch (error) {
         console.error('Erro ao listar metas:', error);
@@ -148,6 +144,8 @@ router.get('/listar', verificarToken, async (req, res) => {
         });
     }
 });
+
+
 
 // GET /api/goal/minhas - Listar metas concluídas pelo usuário logado
 router.get('/minhas', verificarToken, async (req, res) => {
@@ -173,7 +171,6 @@ router.post('/', verificarToken, verificarAdmin, async (req, res) => {
             titulo, 
             descricao, 
             tipo, 
-            requisito, 
             recompensa, 
             requerAprovacao,
             maxConclusoes,
@@ -186,15 +183,15 @@ router.post('/', verificarToken, verificarAdmin, async (req, res) => {
         } = req.body;
 
         // Validação dos campos obrigatórios
-        if (!titulo || !descricao || !tipo || !requisito || !recompensa) {
+        if (!titulo || !descricao || !tipo || !recompensa) {
             return res.status(400).json({
-                message: 'Título, descrição, tipo, requisito e recompensa são obrigatórios'
+                message: 'Título, descrição, tipo e recompensa são obrigatórios'
             });
         }
 
-        if (requisito <= 0 || recompensa <= 0) {
+        if (recompensa <= 0) {
             return res.status(400).json({
-                message: 'Requisito e recompensa devem ser valores positivos'
+                message: 'Recompensa deve ser valores positivos'
             });
         }
 
@@ -233,18 +230,18 @@ router.post('/', verificarToken, verificarAdmin, async (req, res) => {
 // POST /api/goal/criar - Criar nova meta (professor/admin) - mantido para compatibilidade
 router.post('/criar', verificarToken, verificarProfessor, async (req, res) => {
     try {
-        const { titulo, descricao, tipo, requisito, recompensa, requerAprovacao } = req.body;
+        const { titulo, descricao, tipo, recompensa, requerAprovacao } = req.body;
 
         // Validação dos campos obrigatórios
-        if (!titulo || !descricao || !tipo || !requisito || !recompensa) {
+        if (!titulo || !descricao || !tipo || !recompensa) {
             return res.status(400).json({
                 message: 'Todos os campos são obrigatórios'
             });
         }
 
-        if (requisito <= 0 || recompensa <= 0) {
+        if (recompensa <= 0) {
             return res.status(400).json({
-                message: 'Requisito e recompensa devem ser valores positivos'
+                message: 'Recompensa deve ser valores positivos'
             });
         }
 

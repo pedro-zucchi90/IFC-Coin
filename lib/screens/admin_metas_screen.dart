@@ -49,7 +49,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
     final formKey = GlobalKey<FormState>();
     final tituloController = TextEditingController();
     final descricaoController = TextEditingController();
-    final requisitoController = TextEditingController();
     final recompensaController = TextEditingController();
     String tipoSelecionado = 'evento';
     bool requerAprovacao = false;
@@ -113,24 +112,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: requisitoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Requisito',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Requisito é obrigatório';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Deve ser um número';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
                     controller: recompensaController,
                     decoration: const InputDecoration(
                       labelText: 'Recompensa (coins)',
@@ -176,7 +157,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                       titulo: tituloController.text,
                       descricao: descricaoController.text,
                       tipo: tipoSelecionado,
-                      requisito: int.parse(requisitoController.text),
                       recompensa: int.parse(recompensaController.text),
                       requerAprovacao: requerAprovacao,
                     );
@@ -216,7 +196,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
     final formKey = GlobalKey<FormState>();
     final tituloController = TextEditingController(text: meta.titulo);
     final descricaoController = TextEditingController(text: meta.descricao);
-    final requisitoController = TextEditingController(text: meta.requisito.toString());
     final recompensaController = TextEditingController(text: meta.recompensa.toString());
     String tipoSelecionado = meta.tipo;
     bool requerAprovacaoEdit = meta.requerAprovacao;
@@ -276,24 +255,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
                       setState(() {
                         tipoSelecionado = value!;
                       });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: requisitoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Requisito',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Requisito é obrigatório';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Deve ser um número';
-                      }
-                      return null;
                     },
                   ),
                   const SizedBox(height: 16),

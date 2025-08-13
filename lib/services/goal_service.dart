@@ -9,36 +9,63 @@ class GoalService {
   // baseUrl vem do config.dart
   final AuthService _authService = AuthService();
 
-  // Listar todas as metas disponíveis
-  Future<List<Goal>> listarMetas({String? tipo}) async {
-    try {
-      final token = _authService.token;
-      if (token == null) throw Exception('Usuário não autenticado');
+// Listar todas as metas disponíveis
+Future<List<Goal>> listarMetas({String? tipo}) async {
+  try {
+    final token = _authService.token;
+    if (token == null) throw Exception('Usuário não autenticado');
 
-      String url = '$baseUrl/goal/listar';
-      if (tipo != null) {
-        url += '?tipo=$tipo';
-      }
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List<dynamic> metasJson = data['metas'];
-        return metasJson.map((json) => Goal.fromJson(json)).toList();
-      } else {
-        throw Exception('Erro ao carregar metas');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
+    String url = '$baseUrl/goal/listar';
+    if (tipo != null) {
+      url += '?tipo=$tipo';
     }
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+
+      List<dynamic> metasJson;
+
+      if (decoded is List) {
+        // resposta direta: [ {...}, {...} ]
+        metasJson = decoded;
+      } else if (decoded is Map<String, dynamic>) {
+        // possíveis formatos: { "metas": [...] } ou { "data": [...] } ou { "data": { "metas": [...] } }
+        if (decoded.containsKey('metas') && decoded['metas'] is List) {
+          metasJson = decoded['metas'];
+        } else if (decoded.containsKey('data') && decoded['data'] is List) {
+          metasJson = decoded['data'];
+        } else if (decoded.containsKey('data') &&
+                   decoded['data'] is Map &&
+                   decoded['data'].containsKey('metas') &&
+                   decoded['data']['metas'] is List) {
+          metasJson = decoded['data']['metas'];
+        } else if (decoded.containsKey('goals') && decoded['goals'] is List) {
+          metasJson = decoded['goals'];
+        } else {
+          throw Exception('Formato inesperado na resposta: ${response.body}');
+        }
+      } else {
+        throw Exception('Formato inesperado na resposta: ${response.body}');
+      }
+      
+      return metasJson.map((json) => Goal.fromJson(json)).toList();
+    } else {
+      // inclua body no erro para facilitar debug
+      throw Exception('Erro ao carregar metas: ${response.statusCode} ${response.body}');
+    }
+  } catch (e) {
+    throw Exception('Erro de conexão: $e');
   }
+}
 
   // Listar metas do usuário logado
   Future<List<Goal>> listarMinhasMetas() async {
@@ -210,7 +237,6 @@ class GoalService {
     required String titulo,
     required String descricao,
     required String tipo,
-    required int requisito,
     required int recompensa,
     bool requerAprovacao = false,
   }) async {
@@ -228,7 +254,6 @@ class GoalService {
           'titulo': titulo,
           'descricao': descricao,
           'tipo': tipo,
-          'requisito': requisito,
           'recompensa': recompensa,
           'requerAprovacao': requerAprovacao,
         }),
