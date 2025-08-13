@@ -138,7 +138,6 @@ class _InfoCard extends StatelessWidget {
     required this.description,
     required this.padding,
     required this.margin,
-    super.key,
   });
 
   @override

@@ -1,12 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
-import '../services/notification_service.dart';
 import '../models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final NotificationService _notificationService = NotificationService();
   
   bool _isLoading = false;
   String? _error;

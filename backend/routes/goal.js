@@ -378,7 +378,7 @@ router.get('/solicitacoes', verificarToken, async (req, res) => {
         if (!["admin", "professor"].includes(req.user.role)) {
             return res.status(403).json({ message: 'Acesso negado' });
         }
-        const status = req.query.status;
+        const { status } = req.query;
         const filtro = status ? { status } : {};
         const solicitacoes = await GoalRequest.find(filtro)
             .populate('goal')

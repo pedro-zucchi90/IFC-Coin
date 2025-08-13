@@ -740,18 +740,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  Color _getTipoColor(String tipo) {
-    switch (tipo) {
-      case 'medalha':
-        return Colors.amber;
-      case 'conquista':
-        return Colors.blue;
-      case 'titulo':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
 }
 
 // Widget para exibir estatísticas

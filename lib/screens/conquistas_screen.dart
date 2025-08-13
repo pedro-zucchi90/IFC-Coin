@@ -339,19 +339,6 @@ class _ConquistasScreenState extends State<ConquistasScreen> {
     );
   }
 
-  Color _getTipoColor(String tipo) {
-    switch (tipo) {
-      case 'medalha':
-        return Colors.amber;
-      case 'conquista':
-        return Colors.blue;
-      case 'titulo':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-
   Color _getCategoriaColor(String categoria) {
     switch (categoria.toLowerCase()) {
       case 'transferências':

@@ -179,7 +179,6 @@ Future<List<Goal>> listarMetas({String? tipo}) async {
   }) async {
     try {
       final token = _authService.token;
-      final user = _authService.currentUser;
       if (token == null) throw Exception('Usuário não autenticado');
 
       final response = await http.put(
@@ -211,7 +210,6 @@ Future<List<Goal>> listarMetas({String? tipo}) async {
   Future<void> deletarMeta(String metaId) async {
     try {
       final token = _authService.token;
-      final user = _authService.currentUser;
       if (token == null) throw Exception('Usuário não autenticado');
 
       final response = await http.delete(

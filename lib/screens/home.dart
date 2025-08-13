@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../config.dart';
 import '../providers/auth_provider.dart';
 import 'como_ganhar.dart';
 import 'faq.dart';
@@ -11,9 +10,6 @@ import 'admin_solicitacoes_professores_screen.dart';
 import 'perfil_screen.dart';
 import '../widgets/user_avatar.dart';
 import 'historico_transacoes_screen.dart';
-import '../models/transaction_model.dart';
-import '../services/transaction_service.dart';
-import 'transferencia_screen.dart';
 import 'admin_aprovar_transferencias_screen.dart';
 import 'qr_code_receber_screen.dart';
 import 'qr_code_ler_screen.dart';
@@ -80,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     
     try {
-      final currentBalance = context.read<AuthProvider>().user?.saldo ?? 0;
       await context.read<AuthProvider>().silentUpdateUserData();
       
       // Verificar se o saldo mudou e se o widget ainda está montado
@@ -459,7 +454,6 @@ class _HomeCard extends StatelessWidget {
     required this.title,
     required this.textColor,
     required this.onTap,
-    super.key,
   });
 
   @override

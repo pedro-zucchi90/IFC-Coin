@@ -17,7 +17,6 @@ class _AdminMetasScreenState extends State<AdminMetasScreen> {
   List<Goal> _metas = [];
   bool _isLoading = true;
   String? _error;
-  final bool _requerAprovacao = false;
 
   @override
   void initState() {

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/goal_model.dart';
 import '../services/goal_service.dart';
-import '../services/notification_service.dart';
-import '../providers/auth_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../widgets/user_avatar.dart';
@@ -20,7 +17,6 @@ class MetasScreen extends StatefulWidget {
 
 class _MetasScreenState extends State<MetasScreen> {
   final GoalService _goalService = GoalService();
-  final NotificationService _notificationService = NotificationService();
   List<Goal> _metas = [];
   bool _isLoading = true;
   String? _error;
@@ -56,44 +52,6 @@ class _MetasScreenState extends State<MetasScreen> {
         _error = e.toString();
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _concluirMeta(Goal meta) async {
-    setState(() { _isLoading = true; });
-    try {
-      await _goalService.concluirMeta(metaId: meta.id!);
-      
-      // Mostrar notificação local
-      final user = context.read<AuthProvider>().user;
-      if (user != null) {
-        await _notificationService.notificarMetaConcluida(
-          user.nome,
-          meta.titulo,
-          meta.recompensa,
-        );
-      }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Meta concluída! +${meta.recompensa} coins'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-      await context.read<AuthProvider>().instantUpdateAfterTransaction();
-      await _carregarMetas();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao concluir meta: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      setState(() { _isLoading = false; });
     }
   }
 
