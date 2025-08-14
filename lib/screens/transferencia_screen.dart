@@ -29,6 +29,7 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
   Transaction? _transacaoRealizada;
   String? _qrData;
   String? _hash;
+  bool _matriculaTravada = false;
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
     };
     setState(() {
       _qrData = _toJsonString(data);
+      _matriculaTravada = true; // Trava o campo de matrícula após gerar o QR Code
     });
   }
 
@@ -196,6 +198,7 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (v) => v == null || v.isEmpty ? 'Informe a matrícula' : null,
+                        enabled: !_matriculaTravada, 
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -358,6 +361,7 @@ class _TransferenciaScreenState extends State<TransferenciaScreen> {
                 onPressed: () {
                   setState(() {
                     _qrData = null;
+                    _matriculaTravada = false; 
                   });
                 },
                 style: OutlinedButton.styleFrom(

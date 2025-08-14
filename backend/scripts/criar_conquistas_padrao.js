@@ -136,7 +136,7 @@ const conquistasPadrao = [
         descricao: 'Acumulou 5000 IFC Coins',
         tipo: 'coins_5000',
         categoria: 'Coins',
-        icone: '💎💎',
+        icone: '💎',
         requisitos: 'Acumular 5000 IFC Coins'
     },
 
