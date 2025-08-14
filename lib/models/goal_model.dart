@@ -7,9 +7,9 @@ class Goal {
   final List<String> usuariosConcluidos;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  final bool? usuarioConcluiu; // Campo adicional para verificar se o usuário atual concluiu
-  final bool? temSolicitacaoPendente; // Campo adicional para verificar se tem solicitação pendente
-  
+  final bool? usuarioConcluiu;
+  final bool? temSolicitacaoPendente;
+
   // Controles de segurança
   final bool ativo;
   final bool requerAprovacao;
@@ -17,7 +17,7 @@ class Goal {
   final int? periodoValidade;
   final DateTime? dataInicio;
   final DateTime? dataFim;
-  
+
   // Evidências necessárias
   final bool evidenciaObrigatoria;
   final String tipoEvidencia;
@@ -53,24 +53,16 @@ class Goal {
       tipo: json['tipo'],
       recompensa: json['recompensa'],
       usuariosConcluidos: List<String>.from(json['usuariosConcluidos'] ?? []),
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : null,
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
-          : null,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       usuarioConcluiu: json['usuarioConcluiu'],
       temSolicitacaoPendente: json['temSolicitacaoPendente'],
       ativo: json['ativo'] ?? true,
       requerAprovacao: json['requerAprovacao'] ?? false,
       maxConclusoes: json['maxConclusoes'],
       periodoValidade: json['periodoValidade'],
-      dataInicio: json['dataInicio'] != null 
-          ? DateTime.parse(json['dataInicio']) 
-          : null,
-      dataFim: json['dataFim'] != null 
-          ? DateTime.parse(json['dataFim']) 
-          : null,
+      dataInicio: json['dataInicio'] != null ? DateTime.parse(json['dataInicio']) : null,
+      dataFim: json['dataFim'] != null ? DateTime.parse(json['dataFim']) : null,
       evidenciaObrigatoria: json['evidenciaObrigatoria'] ?? false,
       tipoEvidencia: json['tipoEvidencia'] ?? 'texto',
       descricaoEvidencia: json['descricaoEvidencia'],
@@ -114,11 +106,11 @@ class Goal {
       usuarioConcluiu: usuarioConcluiu ?? this.usuarioConcluiu,
     );
   }
-} 
+}
 
 class GoalRequest {
   final String id;
-  final Goal goal;
+  final Goal? goal; // <- nullable agora
   final Map<String, dynamic> aluno;
   final String status;
   final String? comentario;
@@ -146,7 +138,7 @@ class GoalRequest {
   factory GoalRequest.fromJson(Map<String, dynamic> json) {
     return GoalRequest(
       id: json['_id'],
-      goal: Goal.fromJson(json['goal']),
+      goal: json['goal'] != null ? Goal.fromJson(json['goal']) : null,
       aluno: json['aluno'],
       status: json['status'],
       comentario: json['comentario'],
@@ -158,4 +150,4 @@ class GoalRequest {
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
-} 
+}

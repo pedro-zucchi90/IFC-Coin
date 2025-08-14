@@ -387,10 +387,15 @@ router.get('/solicitacoes', verificarToken, async (req, res) => {
             .populate('aluno', 'nome email matricula')
             .sort({ createdAt: -1 });
 
-        // Adiciona flag metaExcluida para solicitações cujo goal não existe
+        // Adiciona flag metaExcluida e protege campos caso a meta seja null
         const solicitacoesComFlag = solicitacoes.map(solicitacao => {
             const obj = solicitacao.toObject();
+            
             obj.metaExcluida = !solicitacao.goal; // true se goal for null
+            obj.tituloMeta = solicitacao.goal ? solicitacao.goal.titulo : 'Meta deletada';
+            obj.descricaoMeta = solicitacao.goal ? solicitacao.goal.descricao : 'A meta foi removida';
+            obj.recompensaMeta = solicitacao.goal ? solicitacao.goal.recompensa : 0;
+
             return obj;
         });
 
@@ -401,6 +406,7 @@ router.get('/solicitacoes', verificarToken, async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 });
+
 
 // POST /api/goal/solicitacoes/:id/aprovar - Aprovar solicitação de conclusão de meta
 router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
@@ -429,11 +435,10 @@ router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
         solicitacao.dataAnalise = new Date();
         solicitacao.resposta = req.body.resposta;
 
-        // Verifica se a meta ainda existe
-        const meta = await Goal.findById(solicitacao.goal?._id);
+        const meta = solicitacao.goal;
 
         if (!meta) {
-            // Marca que a meta foi excluída
+            // Caso a meta tenha sido deletada
             solicitacao.metaExcluida = true;
             await solicitacao.save();
             return res.json({ 
@@ -448,7 +453,7 @@ router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
             await meta.save();
 
             // Adiciona coins ao aluno
-            const aluno = await User.findById(solicitacao.aluno._id);
+            const aluno = solicitacao.aluno;
             await aluno.adicionarCoins(meta.recompensa);
 
             // Atualiza estatísticas
@@ -479,6 +484,7 @@ router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 });
+
 
 // POST /api/goal/solicitacoes/:id/recusar - Recusar solicitação de conclusão de meta
 router.post('/solicitacoes/:id/recusar', verificarToken, async (req, res) => {
@@ -568,22 +574,22 @@ router.delete('/:id', verificarToken, verificarAdmin, async (req, res) => {
         const meta = await Goal.findById(req.params.id);
 
         if (!meta) {
-            return res.status(404).json({
-                message: 'Meta não encontrada'
-            });
+            return res.status(404).json({ message: 'Meta não encontrada' });
         }
+
+        // Marca goal como null em solicitações relacionadas para preservar histórico
+        await GoalRequest.updateMany(
+            { goal: meta._id, status: 'aprovada' }, // ou você pode incluir 'pendente' se quiser
+            { $set: { goal: null } }
+        );
 
         await Goal.findByIdAndDelete(req.params.id);
 
-        res.json({
-            message: 'Meta deletada com sucesso'
-        });
+        res.json({ message: 'Meta deletada com sucesso, histórico de solicitações preservado' });
 
     } catch (error) {
         console.error('Erro ao deletar meta:', error);
-        res.status(500).json({
-            message: 'Erro interno do servidor'
-        });
+        res.status(500).json({ message: 'Erro interno do servidor' });
     }
 });
 

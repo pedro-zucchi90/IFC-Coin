@@ -139,7 +139,10 @@ class _AdminAprovarSolicitacoesMetasScreenState extends State<AdminAprovarSolici
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Meta: ${req.goal.titulo}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  'Meta: ${req.goal?.titulo ?? "Meta deletada"}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 Text('Aluno: ${req.aluno['nome']} (${req.aluno['matricula']})'),
                                 if (req.comentario != null && req.comentario!.isNotEmpty)
                                   Padding(
