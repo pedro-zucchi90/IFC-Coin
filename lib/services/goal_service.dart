@@ -156,7 +156,8 @@ Future<List<Goal>> listarMetas({String? tipo}) async {
         final data = jsonDecode(responseData);
         return {
           'message': data['message'],
-          'requerAprovacao': data.containsKey('requerAprovacao') ? data['requerAprovacao'] : false,
+          'goalRequest': data['goalRequest'], // se existir
+          'requerAprovacao': data.containsKey('goalRequest') ? true : false,
         };
       } else {
         final errorData = jsonDecode(responseData);

@@ -349,15 +349,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     _HomeCard(
                       icon: Icons.check_circle_outline,
                       iconColor: Color(0xFF1976D2),
-                      title: isAdmin ? 'Gerenciar Metas' : 'Metas',
+                      title: (isAdmin || authProvider.isProfessor) ? 'Gerenciar Metas' : 'Metas',
                       textColor: Color(0xFF1976D2),
                       onTap: () async {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => isAdmin 
-                                ? const AdminMetasScreen()
-                                : const MetasScreen(),
+                            builder: (context) => (isAdmin || authProvider.isProfessor)
+                                ? const AdminMetasScreen() // Professores e admins acessam essa tela
+                                : const MetasScreen(),     // Alunos acessam Metas normal
                           ),
                         );
                         // Atualizar dados após voltar das metas
@@ -380,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ];
 
-                  // Adicionar botões específicos para admin
+                  // Adicionar botões específicos para admin (não professores)
                   if (isAdmin) {
                     cards.addAll([
                       _HomeCard(
@@ -415,6 +415,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                     ]);
                   }
+
                   
                   return GridView.count(
                     crossAxisCount: 2,

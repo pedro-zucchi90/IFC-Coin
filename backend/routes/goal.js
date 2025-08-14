@@ -378,13 +378,24 @@ router.get('/solicitacoes', verificarToken, async (req, res) => {
         if (!["admin", "professor"].includes(req.user.role)) {
             return res.status(403).json({ message: 'Acesso negado' });
         }
-        const { status } = req.query;
+
+        const status = req.query.status;
         const filtro = status ? { status } : {};
+
         const solicitacoes = await GoalRequest.find(filtro)
             .populate('goal')
             .populate('aluno', 'nome email matricula')
             .sort({ createdAt: -1 });
-        res.json(solicitacoes);
+
+        // Adiciona flag metaExcluida para solicitações cujo goal não existe
+        const solicitacoesComFlag = solicitacoes.map(solicitacao => {
+            const obj = solicitacao.toObject();
+            obj.metaExcluida = !solicitacao.goal; // true se goal for null
+            return obj;
+        });
+
+        res.json(solicitacoesComFlag);
+
     } catch (error) {
         console.error('Erro ao listar solicitações:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -394,39 +405,60 @@ router.get('/solicitacoes', verificarToken, async (req, res) => {
 // POST /api/goal/solicitacoes/:id/aprovar - Aprovar solicitação de conclusão de meta
 router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
     try {
+        // Verifica se o usuário tem permissão
         if (!["admin", "professor"].includes(req.user.role)) {
             return res.status(403).json({ message: 'Acesso negado' });
         }
-        const solicitacao = await GoalRequest.findById(req.params.id).populate('goal').populate('aluno');
+
+        // Busca a solicitação e popula goal e aluno
+        const solicitacao = await GoalRequest.findById(req.params.id)
+            .populate('goal')
+            .populate('aluno');
+
         if (!solicitacao) {
             return res.status(404).json({ message: 'Solicitação não encontrada' });
         }
+
         if (solicitacao.status !== 'pendente') {
             return res.status(400).json({ message: 'Solicitação já foi processada' });
         }
+
         // Marcar como aprovada
         solicitacao.status = 'aprovada';
         solicitacao.analisadoPor = req.user._id;
         solicitacao.dataAnalise = new Date();
         solicitacao.resposta = req.body.resposta;
-        await solicitacao.save();
-        // Marcar meta como concluída para o aluno
-        const meta = await Goal.findById(solicitacao.goal._id);
+
+        // Verifica se a meta ainda existe
+        const meta = await Goal.findById(solicitacao.goal?._id);
+
+        if (!meta) {
+            // Marca que a meta foi excluída
+            solicitacao.metaExcluida = true;
+            await solicitacao.save();
+            return res.json({ 
+                message: 'Solicitação aprovada, mas a meta foi removida. Nenhum coin foi creditado.', 
+                solicitacao 
+            });
+        }
+
+        // Adiciona aluno à lista de concluintes se ainda não estiver
         if (!meta.usuariosConcluidos.includes(solicitacao.aluno._id)) {
             meta.usuariosConcluidos.push(solicitacao.aluno._id);
             await meta.save();
-            // Adicionar coins ao aluno
+
+            // Adiciona coins ao aluno
             const aluno = await User.findById(solicitacao.aluno._id);
             await aluno.adicionarCoins(meta.recompensa);
-            
-            // Atualizar estatísticas para conquistas
+
+            // Atualiza estatísticas
             await aluno.atualizarEstatisticas('meta_concluida');
             await aluno.atualizarEstatisticas('coins_ganhos', meta.recompensa);
-            
-            // Verificar conquistas automaticamente
+
+            // Verifica conquistas
             await aluno.verificarConquistas();
-            
-            // Criar transação
+
+            // Cria transação
             const Transaction = require('../models/transactionModel');
             const transacao = new Transaction({
                 tipo: 'recebido',
@@ -438,7 +470,10 @@ router.post('/solicitacoes/:id/aprovar', verificarToken, async (req, res) => {
             });
             await transacao.save();
         }
+
+        await solicitacao.save();
         res.json({ message: 'Solicitação aprovada e coins creditados!', solicitacao });
+
     } catch (error) {
         console.error('Erro ao aprovar solicitação:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
