@@ -13,6 +13,10 @@ class User {
   final DateTime? createdAt; // Data de criação
   final DateTime? updatedAt; // Data de atualização
 
+  // Campos para reset de senha
+  final String? resetPasswordToken; // Token de reset de senha
+  final DateTime? resetPasswordExpires; // Data de expiração do token
+
   User({
     this.id,
     required this.nome,
@@ -26,6 +30,8 @@ class User {
     this.statusAprovacao,
     this.createdAt,
     this.updatedAt,
+    this.resetPasswordToken,
+    this.resetPasswordExpires,
   });
 
   // Cria um User a partir de um JSON
@@ -51,6 +57,10 @@ class User {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'].toString())
           : null,
+      resetPasswordToken: json['resetPasswordToken']?.toString(),
+      resetPasswordExpires: json['resetPasswordExpires'] != null
+          ? DateTime.tryParse(json['resetPasswordExpires'].toString())
+          : null,
     );
   }
 
@@ -69,6 +79,8 @@ class User {
       'statusAprovacao': statusAprovacao,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'resetPasswordToken': resetPasswordToken,
+      'resetPasswordExpires': resetPasswordExpires?.toIso8601String(),
     };
   }
 
@@ -86,6 +98,8 @@ class User {
     String? statusAprovacao,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? resetPasswordToken,
+    DateTime? resetPasswordExpires,
   }) {
     return User(
       id: id ?? this.id,
@@ -100,6 +114,8 @@ class User {
       statusAprovacao: statusAprovacao ?? this.statusAprovacao,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      resetPasswordToken: resetPasswordToken ?? this.resetPasswordToken,
+      resetPasswordExpires: resetPasswordExpires ?? this.resetPasswordExpires,
     );
   }
 

@@ -162,6 +162,8 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:8080,http://localhost:8000
 # Configurações de Email (opcional; futuramente usado para envio de redefinição de senhas)
 EMAIL=seuemail@gmail.com
 SENHA_EMAIL=suasenha
+
+FRONTEND_URL=baseURLdoApp
 ```
 
 ### 2.4 Iniciando o MongoDB Local

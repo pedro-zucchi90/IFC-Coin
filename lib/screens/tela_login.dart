@@ -4,6 +4,7 @@ import '../particle_background.dart';
 import '../providers/auth_provider.dart';
 import 'primeira_tela.dart';
 import 'home.dart';
+import 'forgot_password_screen.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
@@ -91,7 +92,12 @@ class _TelaLoginState extends State<TelaLogin> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // ação de esqueci senha
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ForgotPasswordScreen(),
+                              ),
+                            );
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.black,

@@ -5,11 +5,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  
+
   bool _isLoading = false;
   String? _error;
   User? _user;
   bool _isInitialized = false;
+
+  // Campos para reset de senha
+  String? resetPasswordToken;
+  DateTime? resetPasswordExpires;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -24,7 +28,7 @@ class AuthProvider extends ChangeNotifier {
   // Inicializar o provider
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     _setLoading(true);
     try {
       await _authService.initialize();
@@ -41,45 +45,45 @@ class AuthProvider extends ChangeNotifier {
 
   // Login
   Future<Map<String, dynamic>> login(String matricula, String senha) async {
-  _setLoading(true);
-  _error = null;
-  
-  try {
-    final response = await _authService.login(matricula, senha);
-    _user = response.user;
+    _setLoading(true);
+    _error = null;
 
-    // 🔹 Verifica se já mostramos a notificação para esse professor
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'notificacao_aprovacao_${_user?.matricula ?? matricula}';
-    bool showApproval = response.showApprovalNotification && prefs.getBool(key) != true;
+    try {
+      final response = await _authService.login(matricula, senha);
+      _user = response.user;
 
-    // Se for pra mostrar agora, grava como já mostrado
-    if (showApproval) {
-      await prefs.setBool(key, true);
+      // 🔹 Verifica se já mostramos a notificação para esse professor
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'notificacao_aprovacao_${_user?.matricula ?? matricula}';
+      bool showApproval = response.showApprovalNotification && prefs.getBool(key) != true;
+
+      // Se for pra mostrar agora, grava como já mostrado
+      if (showApproval) {
+        await prefs.setBool(key, true);
+      }
+
+      notifyListeners();
+      return {
+        'success': true,
+        'showApprovalNotification': showApproval,
+      };
+    } catch (e) {
+      String msg = e.toString().toLowerCase();
+      if (msg.contains('matrícula') || msg.contains('senha') || msg.contains('incorret')) {
+        _error = 'Matrícula ou senha incorretos';
+      } else {
+        _error = e.toString();
+      }
+      notifyListeners();
+      return {
+        'success': false,
+        'showApprovalNotification': false,
+      };
+    } finally {
+      _setLoading(false);
+      notifyListeners();
     }
-
-    notifyListeners();
-    return {
-      'success': true,
-      'showApprovalNotification': showApproval,
-    };
-  } catch (e) {
-    String msg = e.toString().toLowerCase();
-    if (msg.contains('matrícula') || msg.contains('senha') || msg.contains('incorret')) {
-      _error = 'Matrícula ou senha incorretos';
-    } else {
-      _error = e.toString();
-    }
-    notifyListeners();
-    return {
-      'success': false,
-      'showApprovalNotification': false,
-    };
-  } finally {
-    _setLoading(false);
-    notifyListeners();
   }
-}
 
   // Registro
   Future<bool> registrar({
@@ -93,7 +97,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _setLoading(true);
     _error = null;
-    
+
     try {
       final response = await _authService.registrar(
         nome: nome,
@@ -104,16 +108,16 @@ class AuthProvider extends ChangeNotifier {
         curso: curso,
         turmas: turmas,
       );
-      
+
       // Se for professor, não fazer login automático (aguarda aprovação)
       if (role == 'professor') {
         // Não fazer login automático, mas retornar true para mostrar sucesso
         return true; // Retorna true para mostrar mensagem de sucesso
       }
-      
+
       // Para alunos e admins, fazer login normal
       _user = response.user;
-      
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -151,7 +155,7 @@ class AuthProvider extends ChangeNotifier {
   // Atualizar dados do usuário
   Future<void> updateUserData() async {
     if (!isLoggedIn) return;
-    
+
     try {
       _user = await _authService.updateUserData();
       notifyListeners();
@@ -164,7 +168,7 @@ class AuthProvider extends ChangeNotifier {
   // Forçar atualização dos dados do usuário (para uso após transações)
   Future<void> forceUpdateUserData() async {
     if (!isLoggedIn) return;
-    
+
     _setLoading(true);
     try {
       _user = await _authService.updateUserData();
@@ -181,7 +185,7 @@ class AuthProvider extends ChangeNotifier {
   // Atualizar dados do usuário silenciosamente (sem mostrar loading)
   Future<void> silentUpdateUserData() async {
     if (!isLoggedIn) return;
-    
+
     try {
       _user = await _authService.updateUserData();
       // Só notifica se ainda há listeners ativos
@@ -199,17 +203,17 @@ class AuthProvider extends ChangeNotifier {
   // Atualização instantânea após transações (com feedback visual)
   Future<void> instantUpdateAfterTransaction() async {
     if (!isLoggedIn) return;
-    
+
     try {
       final oldBalance = _user?.saldo ?? 0;
       _user = await _authService.updateUserData();
       final newBalance = _user?.saldo ?? 0;
-      
+
       // Só notifica se ainda há listeners ativos
       if (hasListeners) {
         notifyListeners();
       }
-      
+
       // Se o saldo mudou, mostrar feedback visual
       if (newBalance != oldBalance) {
         // O feedback visual será tratado na UI
@@ -240,4 +244,26 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = loading;
     notifyListeners();
   }
-} 
+
+  // =========================
+  // RESET DE SENHA
+  // =========================
+
+  /// Solicita o envio do email de redefinição de senha
+  Future<bool> solicitarResetSenha(String email) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _authService.solicitarResetSenha(email);
+      _error = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+}

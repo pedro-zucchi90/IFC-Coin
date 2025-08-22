@@ -88,7 +88,9 @@ const userSchema = new mongoose.Schema({
         diasConsecutivos: { type: Number, default: 0 },
         ultimoLoginConsecutivo: { type: Date, default: Date.now },
         temFotoPerfil: { type: Boolean, default: false }
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date
 }, 
 { timestamps: true }); //adiciona createdAt e updatedAt automaticamente
 

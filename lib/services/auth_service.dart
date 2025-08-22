@@ -5,7 +5,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import '../models/user_model.dart';
 import '../config.dart';
 
-// Serviço responsável por autenticação, registro, login, logout e gerenciamento de token
+// Serviço responsável por autenticação, registro, login, logout, gerenciamento de token e reset de senha
 class AuthService {
   // Chaves para armazenamento local
   static const String tokenKey = 'auth_token';
@@ -46,7 +46,7 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       _token = prefs.getString(tokenKey);
-      
+
       final userJson = prefs.getString(userKey);
       if (userJson != null) {
         _currentUser = User.fromJson(jsonDecode(userJson));
@@ -67,7 +67,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(tokenKey, token);
       await prefs.setString(userKey, jsonEncode(user.toJson()));
-      
+
       _token = token;
       _currentUser = user;
     } catch (e) {
@@ -88,7 +88,7 @@ class AuthService {
           senha: senha,
         ).toJson()),
       );
-    
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final loginResponse = LoginResponse.fromJson(data);
@@ -135,7 +135,7 @@ class AuthService {
           'turmas': turmas,
         }),
       );
-    
+
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         // Se for professor, não retorna token, só user
@@ -211,6 +211,49 @@ class AuthService {
     }
   }
 
+  // Envia email de solicitação de reset de senha
+  Future<void> solicitarResetSenha(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/forgot-password'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': email}),
+      );
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Erro ao solicitar redefinição de senha');
+      }
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Erro ao solicitar redefinição de senha: $e');
+    }
+  }
+
+  // Realiza o reset de senha usando token e nova senha
+  Future<void> resetarSenha({required String token, required String novaSenha}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/reset-password'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'token': token,
+          'novaSenha': novaSenha,
+        }),
+      );
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Erro ao redefinir senha');
+      }
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Erro ao redefinir senha: $e');
+    }
+  }
+
   // Verifica se o usuário tem uma determinada role
   bool hasRole(String role) {
     return _currentUser?.role == role;
@@ -220,4 +263,4 @@ class AuthService {
   bool get isAdmin => hasRole('admin');
   bool get isProfessor => hasRole('professor');
   bool get isAluno => hasRole('aluno');
-} 
+}
