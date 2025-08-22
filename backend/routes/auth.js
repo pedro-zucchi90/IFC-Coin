@@ -367,7 +367,7 @@ router.post('/forgot-password', async (req, res) => {
 
         // Monta o link de redefinição
         const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const resetLink = `${frontendURL}/api/auth/reset-password?token=${token}`;
+        const resetLink = `${frontendURL}/auth/reset-password?token=${token}`;
 
         // Conteúdo do e-mail
         const mailOptions = {

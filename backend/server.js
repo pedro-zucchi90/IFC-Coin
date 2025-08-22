@@ -6,6 +6,23 @@ const express = require('express'); // Framework web para Node.js
 const mongoose = require('mongoose'); // ODM para MongoDB
 const cors = require('cors'); // Middleware para habilitar CORS
 const path = require('path'); // Utilitário para manipulação de caminhos
+const os = require('os');
+const networkInterfaces = os.networkInterfaces();
+
+function getLocalIPv4() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      // Pega apenas IPv4, não internos e que não sejam Tailscale
+      if (iface.family === 'IPv4' && !iface.internal && !name.toLowerCase().includes('tailscale')) {
+        return iface.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
+
+const localIP = getLocalIPv4();
 
 // Importa rotas
 const authRoutes = require('./routes/auth');
@@ -92,7 +109,7 @@ app.use('*', (req, res) => {
 
 // Inicia o servidor na porta 3000 (ou definida no .env)
 app.listen(3000, '0.0.0.0', () => {
-  console.log('Servidor rodando na porta 3000');
-  console.log('API disponível em: http://127.0.0.1:3000/api');
+  console.log(`API disponível em: http://${localIP}:3000/api`);
+  console.log(`Painel administrativo: http://${localIP}:3000/admin`);
   console.log('Protótipo do Painel Administrativo disponível em: http://127.0.0.1:3000/admin');
 }); 
